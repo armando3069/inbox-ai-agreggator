@@ -363,8 +363,8 @@ export class TelegramService {
       this.chatGateway.emitNewConversation(userId, conversation);
     }
 
-    // 6. Auto-reply if enabled
-    if (this.aiAssistantService.autoReplyEnabled && msg.text) {
+    // 6. Auto-reply if enabled for this user
+    if (this.aiAssistantService.isAutoReplyEnabled(userId) && msg.text) {
       this.triggerAutoReply(platformAccount, conversation, userId, msg.text).catch((e) =>
         this.logger.error(`[TG AUTO-REPLY] failed for conversation ${conversation.id}`, e),
       );
@@ -379,11 +379,24 @@ export class TelegramService {
     userId: number,
     userText: string,
   ): Promise<void> {
-    const reply = await this.aiAssistantService.generateReplyFromMessage({
+    const { reply, confidence } = await this.aiAssistantService.generateReplyFromMessage({
       conversationId: conversation.id,
       latestUserMessage: userText,
       userId,
     });
+
+    const { confidenceThreshold } = this.aiAssistantService.getConfig(userId);
+
+    this.logger.log(
+      `[TG AUTO-REPLY] conversation=${conversation.id} confidence=${confidence}% threshold=${confidenceThreshold}%`,
+    );
+
+    if (confidence < confidenceThreshold) {
+      this.logger.warn(
+        `[TG AUTO-REPLY] skipped — confidence ${confidence}% below threshold ${confidenceThreshold}%`,
+      );
+      return;
+    }
 
     await this.sendMessage(
       platformAccount.access_token,
@@ -402,8 +415,6 @@ export class TelegramService {
     });
 
     this.chatGateway.emitNewMessage(userId, message);
-    this.logger.log(
-      `[TG AUTO-REPLY] sent reply to conversation ${conversation.id}`,
-    );
+    this.logger.log(`[TG AUTO-REPLY] sent to conversation ${conversation.id}`);
   }
 }

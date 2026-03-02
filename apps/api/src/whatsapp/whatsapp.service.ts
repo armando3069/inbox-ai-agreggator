@@ -293,8 +293,8 @@ export class WhatsappService {
     this.chatGateway.emitNewMessage(userId, message);
     if (isNew) this.chatGateway.emitNewConversation(userId, conversation);
 
-    // Auto-reply if enabled
-    if (this.aiAssistantService.autoReplyEnabled && msg.text?.body) {
+    // Auto-reply if enabled for this user
+    if (this.aiAssistantService.isAutoReplyEnabled(userId) && msg.text?.body) {
       this.triggerAutoReply(platformAccount, conversation!, userId, msg.text.body).catch((e) =>
         this.logger.error(`[WA AUTO-REPLY] failed for conversation ${conversation!.id}`, e),
       );
@@ -309,11 +309,24 @@ export class WhatsappService {
     userId: number,
     userText: string,
   ): Promise<void> {
-    const reply = await this.aiAssistantService.generateReplyFromMessage({
+    const { reply, confidence } = await this.aiAssistantService.generateReplyFromMessage({
       conversationId: conversation.id,
       latestUserMessage: userText,
       userId,
     });
+
+    const { confidenceThreshold } = this.aiAssistantService.getConfig(userId);
+
+    this.logger.log(
+      `[WA AUTO-REPLY] conversation=${conversation.id} confidence=${confidence}% threshold=${confidenceThreshold}%`,
+    );
+
+    if (confidence < confidenceThreshold) {
+      this.logger.warn(
+        `[WA AUTO-REPLY] skipped — confidence ${confidence}% below threshold ${confidenceThreshold}%`,
+      );
+      return;
+    }
 
     await this.callGraphApi(
       platformAccount.external_app_id!,
@@ -333,8 +346,6 @@ export class WhatsappService {
     });
 
     this.chatGateway.emitNewMessage(userId, message);
-    this.logger.log(
-      `[WA AUTO-REPLY] sent reply to conversation ${conversation.id}`,
-    );
+    this.logger.log(`[WA AUTO-REPLY] sent to conversation ${conversation.id}`);
   }
 }
