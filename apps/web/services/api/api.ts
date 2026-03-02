@@ -97,6 +97,25 @@ async function aiGet<T>(path: string): Promise<T> {
     return res.json() as Promise<T>;
 }
 
+export type ResponseTone = "professional" | "friendly" | "casual" | "strict";
+
+export interface AiAssistantConfig {
+    userId: number;
+    autoReplyEnabled: boolean;
+    responseTone: ResponseTone;
+    confidenceThreshold: number;
+}
+
+export function getAiConfig(): Promise<AiAssistantConfig> {
+    return aiGet("ai-assistant/config");
+}
+
+export function updateAiConfig(
+    patch: Partial<Pick<AiAssistantConfig, "autoReplyEnabled" | "responseTone" | "confidenceThreshold">>,
+): Promise<AiAssistantConfig> {
+    return aiPost("ai-assistant/config", patch);
+}
+
 export function getAutoReplyStatus(): Promise<{ enabled: boolean }> {
     return aiGet("ai-assistant/auto-reply/status");
 }

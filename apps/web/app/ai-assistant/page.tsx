@@ -13,19 +13,33 @@ import {
   Loader2,
   MessageSquare,
   X,
+  ChevronDown,
+  SlidersHorizontal,
+  ShieldAlert,
 } from "lucide-react";
 import {
-  getAutoReplyStatus,
-  setAutoReply,
+  getAiConfig,
+  updateAiConfig,
   testAiReply,
   uploadKnowledgePdf,
   askKnowledge,
   getKnowledgeFiles,
   clearKnowledge,
+  type AiAssistantConfig,
+  type ResponseTone,
   type IndexedFile,
 } from "@/services/api/api";
 
-// ── Toggle switch ─────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const TONE_OPTIONS: { value: ResponseTone; label: string; description: string }[] = [
+  { value: "professional", label: "Professional",  description: "Clear, concise, and formal" },
+  { value: "friendly",     label: "Friendly",      description: "Warm and helpful" },
+  { value: "casual",       label: "Casual",        description: "Relaxed and conversational" },
+  { value: "strict",       label: "Strict",        description: "Direct and minimal" },
+];
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function Toggle({
   checked,
@@ -56,26 +70,126 @@ function Toggle({
   );
 }
 
+function ToneSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: ResponseTone;
+  onChange: (v: ResponseTone) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = TONE_OPTIONS.find((o) => o.value === value) ?? TONE_OPTIONS[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((p) => !p)}
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <div className="text-left">
+          <span className="font-medium">{selected.label}</span>
+          <span className="ml-2 text-slate-400">— {selected.description}</span>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+          {TONE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-slate-50 ${
+                opt.value === value ? "bg-blue-50" : ""
+              }`}
+            >
+              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-blue-500">
+                {opt.value === value && (
+                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                )}
+              </div>
+              <div>
+                <p className="font-medium text-slate-800">{opt.label}</p>
+                <p className="text-xs text-slate-400">{opt.description}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConfidenceSlider({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}) {
+  const color =
+    value >= 75 ? "bg-green-500" :
+    value >= 50 ? "bg-yellow-500" :
+                  "bg-red-400";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-slate-600">Confidence threshold</span>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${color}`}>
+          {value}%
+        </span>
+      </div>
+
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(parseInt(e.target.value, 10))}
+        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+      />
+
+      <div className="flex justify-between text-xs text-slate-400">
+        <span>0% — always respond</span>
+        <span>100% — very strict</span>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AiAssistantPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"configuration" | "knowledge">(
-    "configuration"
-  );
+  const [activeTab, setActiveTab] = useState<"configuration" | "knowledge">("configuration");
 
-  // ── Auto-reply state ────────────────────────────────────────────────────────
+  // ── Config state ─────────────────────────────────────────────────────────────
+  const [configLoading, setConfigLoading] = useState(true);
   const [autoReply, setAutoReplyState] = useState(false);
-  const [togglingAutoReply, setTogglingAutoReply] = useState(false);
-  const [autoReplyError, setAutoReplyError] = useState<string | null>(null);
+  const [tone, setToneState] = useState<ResponseTone>("professional");
+  const [threshold, setThresholdState] = useState(70);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
 
-  // ── Test AI reply state ─────────────────────────────────────────────────────
+  // ── Test AI reply state ───────────────────────────────────────────────────────
   const [testInput, setTestInput] = useState("");
   const [testReply, setTestReplyText] = useState<string | null>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
 
-  // ── Knowledge Base state ────────────────────────────────────────────────────
+  // ── Knowledge Base state ──────────────────────────────────────────────────────
   const [kbFiles, setKbFiles] = useState<IndexedFile[]>([]);
   const [kbFilesLoading, setKbFilesLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -92,21 +206,45 @@ export default function AiAssistantPage() {
   const [clearingKb, setClearingKb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Load auto-reply status on mount ────────────────────────────────────────
+  // ── Load full config on mount ─────────────────────────────────────────────────
   useEffect(() => {
-    getAutoReplyStatus()
-      .then(({ enabled }) => setAutoReplyState(enabled))
-      .catch(() => {/* silently ignore — API may not be ready */});
+    getAiConfig()
+      .then((cfg: AiAssistantConfig) => {
+        setAutoReplyState(cfg.autoReplyEnabled);
+        setToneState(cfg.responseTone);
+        setThresholdState(cfg.confidenceThreshold);
+      })
+      .catch(() => { /* silently ignore — API may not be ready */ })
+      .finally(() => setConfigLoading(false));
   }, []);
 
-  // ── Load KB files when tab is opened ───────────────────────────────────────
+  // ── Config save helper ────────────────────────────────────────────────────────
+  const saveConfig = useCallback(
+    async (patch: Partial<Pick<AiAssistantConfig, "autoReplyEnabled" | "responseTone" | "confidenceThreshold">>) => {
+      setSavingConfig(true);
+      setConfigError(null);
+      try {
+        const updated = await updateAiConfig(patch);
+        setAutoReplyState(updated.autoReplyEnabled);
+        setToneState(updated.responseTone);
+        setThresholdState(updated.confidenceThreshold);
+      } catch {
+        setConfigError("Nu s-a putut salva configurația. Încearcă din nou.");
+      } finally {
+        setSavingConfig(false);
+      }
+    },
+    [],
+  );
+
+  // ── Load KB files when tab opens ──────────────────────────────────────────────
   const loadKbFiles = useCallback(async () => {
     setKbFilesLoading(true);
     try {
       const { files } = await getKnowledgeFiles();
       setKbFiles(files);
     } catch {
-      // Not critical — in-memory data may have reset
+      // Not critical
     } finally {
       setKbFilesLoading(false);
     }
@@ -116,21 +254,7 @@ export default function AiAssistantPage() {
     if (activeTab === "knowledge") loadKbFiles();
   }, [activeTab, loadKbFiles]);
 
-  // ── Configuration handlers ──────────────────────────────────────────────────
-
-  const handleAutoReplyToggle = async (next: boolean) => {
-    setTogglingAutoReply(true);
-    setAutoReplyError(null);
-    try {
-      const { enabled } = await setAutoReply(next);
-      setAutoReplyState(enabled);
-    } catch {
-      setAutoReplyError("Nu s-a putut schimba starea. Încearcă din nou.");
-    } finally {
-      setTogglingAutoReply(false);
-    }
-  };
-
+  // ── Test reply handler ────────────────────────────────────────────────────────
   const handleTestSubmit = async () => {
     if (!testInput.trim()) return;
     setTestLoading(true);
@@ -146,8 +270,7 @@ export default function AiAssistantPage() {
     }
   };
 
-  // ── Knowledge Base handlers ─────────────────────────────────────────────────
-
+  // ── KB handlers ───────────────────────────────────────────────────────────────
   const handlePdfUpload = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       setUploadStatus({ state: "error", message: "Doar fișiere PDF sunt acceptate." });
@@ -157,7 +280,6 @@ export default function AiAssistantPage() {
     try {
       const result = await uploadKnowledgePdf(file);
       setUploadStatus({ state: "done", name: result.file, chunks: result.chunks });
-      // Refresh the files list
       const { files } = await getKnowledgeFiles();
       setKbFiles(files);
     } catch (e) {
@@ -209,7 +331,7 @@ export default function AiAssistantPage() {
     }
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -268,7 +390,13 @@ export default function AiAssistantPage() {
         {activeTab === "configuration" && (
           <div className="space-y-4">
 
-            {/* Auto-reply toggle */}
+            {configError && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm text-red-600">{configError}</p>
+              </div>
+            )}
+
+            {/* ── Auto-reply toggle ── */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
@@ -297,20 +425,92 @@ export default function AiAssistantPage() {
                       />
                       {autoReply ? "Activ" : "Inactiv"}
                     </span>
-                    {autoReplyError && (
-                      <p className="mt-2 text-xs text-red-500">{autoReplyError}</p>
-                    )}
                   </div>
                 </div>
                 <Toggle
                   checked={autoReply}
-                  onChange={handleAutoReplyToggle}
-                  disabled={togglingAutoReply}
+                  onChange={(v) => saveConfig({ autoReplyEnabled: v })}
+                  disabled={savingConfig || configLoading}
                 />
               </div>
             </div>
 
-            {/* Test AI reply */}
+            {/* ── Response Tone ── */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+                  <SlidersHorizontal className="h-5 w-5 text-violet-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800">Response Tone</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Definește stilul de comunicare al asistentului AI în conversații.
+                  </p>
+                </div>
+              </div>
+
+              {configLoading ? (
+                <div className="flex items-center gap-2 py-3 text-sm text-slate-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Se încarcă…
+                </div>
+              ) : (
+                <ToneSelector
+                  value={tone}
+                  onChange={(v) => {
+                    setToneState(v);
+                    saveConfig({ responseTone: v });
+                  }}
+                  disabled={savingConfig}
+                />
+              )}
+            </div>
+
+            {/* ── Confidence Threshold ── */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                  <ShieldAlert className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800">Confidence Threshold</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    AI-ul răspunde automat <strong>numai</strong> dacă gradul de
+                    siguranță depășește pragul setat. Sub prag, mesajul rămâne
+                    pentru review manual.
+                  </p>
+                </div>
+              </div>
+
+              {configLoading ? (
+                <div className="flex items-center gap-2 py-3 text-sm text-slate-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Se încarcă…
+                </div>
+              ) : (
+                <ConfidenceSlider
+                  value={threshold}
+                  onChange={(v) => setThresholdState(v)}
+                  disabled={savingConfig}
+                />
+              )}
+
+              {/* Save button — only appears after the user moves the slider */}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => saveConfig({ confidenceThreshold: threshold })}
+                  disabled={savingConfig || configLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                >
+                  {savingConfig ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null}
+                  Salvează pragul
+                </button>
+              </div>
+            </div>
+
+            {/* ── Test AI reply ── */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-start gap-4 mb-4">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
@@ -319,7 +519,8 @@ export default function AiAssistantPage() {
                 <div>
                   <p className="font-semibold text-slate-800">Test AI Reply</p>
                   <p className="mt-1 text-sm text-slate-500">
-                    Trimite un mesaj de test și vezi răspunsul generat de AI.
+                    Trimite un mesaj de test și vezi răspunsul generat de AI cu
+                    tonul configurat mai sus.
                   </p>
                 </div>
               </div>
@@ -372,32 +573,6 @@ export default function AiAssistantPage() {
               )}
             </div>
 
-            {/* Coming soon cards */}
-            {[
-              {
-                label: "Response language",
-                desc: "Detectează automat limba clientului și răspunde în aceeași limbă.",
-              },
-              {
-                label: "Confidence threshold",
-                desc: "Răspunde doar când gradul de siguranță al AI-ului depășește pragul setat.",
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm opacity-50"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-slate-800">{item.label}</p>
-                    <p className="mt-1 text-sm text-slate-500">{item.desc}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-                    În curând
-                  </span>
-                </div>
-              </div>
-            ))}
           </div>
         )}
 

@@ -17,10 +17,12 @@ import { ConfigService } from '@nestjs/config';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiAssistantService } from './ai-assistant.service';
+import type { AiAssistantConfig } from './ai-assistant.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChatGateway } from '../chat/chat.gateway';
 import { TestReplyDto } from './dto/test-reply.dto';
 import { AutoReplyToggleDto } from './dto/auto-reply-toggle.dto';
+import { UpdateConfigDto } from './dto/update-config.dto';
 
 interface AuthenticatedRequest extends Request {
   user: { id: number; email: string };
@@ -38,13 +40,34 @@ export class AiAssistantController {
     private readonly config: ConfigService,
   ) {}
 
+  // ── GET /ai-assistant/config ───────────────────────────────────────────────
+
+  @Get('config')
+  getConfig(@Request() req: AuthenticatedRequest): AiAssistantConfig {
+    return this.aiAssistantService.getConfig(req.user.id);
+  }
+
+  // ── POST /ai-assistant/config ──────────────────────────────────────────────
+
+  @Post('config')
+  @HttpCode(HttpStatus.OK)
+  updateConfig(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: UpdateConfigDto,
+  ): AiAssistantConfig {
+    return this.aiAssistantService.updateConfig(req.user.id, dto);
+  }
+
   // ── POST /ai-assistant/test-reply ─────────────────────────────────────────
 
   @Post('test-reply')
   @HttpCode(HttpStatus.OK)
-  async testReply(@Body() dto: TestReplyDto): Promise<{ reply: string }> {
+  async testReply(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: TestReplyDto,
+  ): Promise<{ reply: string }> {
     try {
-      const reply = await this.aiAssistantService.generateSimpleReply(dto.text);
+      const reply = await this.aiAssistantService.generateSimpleReply(dto.text, req.user.id);
       return { reply };
     } catch (e) {
       this.logger.error('test-reply failed', e);
@@ -52,38 +75,34 @@ export class AiAssistantController {
     }
   }
 
-  // ── POST /ai-assistant/auto-reply/enable ──────────────────────────────────
+  // ── POST /ai-assistant/auto-reply/enable ─────────────────────────────────
+  // Kept for backward compatibility — delegates to updateConfig.
 
   @Post('auto-reply/enable')
   @HttpCode(HttpStatus.OK)
-  enable(@Body() dto: AutoReplyToggleDto): { enabled: boolean } {
-    this.aiAssistantService.setAutoReply(dto.enabled);
+  enableAutoReply(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: AutoReplyToggleDto,
+  ): { enabled: boolean } {
+    this.aiAssistantService.updateConfig(req.user.id, { autoReplyEnabled: dto.enabled });
     return { enabled: dto.enabled };
   }
 
-  // ── GET /ai-assistant/auto-reply/status ───────────────────────────────────
+  // ── GET /ai-assistant/auto-reply/status ──────────────────────────────────
 
   @Get('auto-reply/status')
-  status(): { enabled: boolean } {
-    return { enabled: this.aiAssistantService.autoReplyEnabled };
+  autoReplyStatus(@Request() req: AuthenticatedRequest): { enabled: boolean } {
+    return { enabled: this.aiAssistantService.getConfig(req.user.id).autoReplyEnabled };
   }
 
   // ── POST /ai-assistant/conversations/:id/auto-reply ───────────────────────
 
-  /**
-   * Manually trigger an AI reply for a specific conversation.
-   * Generates the reply, sends it via the right platform, saves to DB, and
-   * pushes it to the user's WebSocket room.
-   *
-   * Avoids circular module deps by making direct HTTP calls to the platform
-   * APIs (same logic as WhatsApp/Telegram services, but inline).
-   */
   @Post('conversations/:id/auto-reply')
   @HttpCode(HttpStatus.OK)
   async autoReply(
     @Request() req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) conversationId: number,
-  ): Promise<{ reply: string }> {
+  ): Promise<{ reply: string; confidence: number }> {
     const userId = req.user.id;
 
     const conversation = await this.prisma.conversations.findFirst({
@@ -99,17 +118,23 @@ export class AiAssistantController {
     const lastMsg = conversation.messages[0];
     if (!lastMsg?.text) throw new NotFoundException('No messages in this conversation');
 
-    // Generate AI reply
+    // Generate AI reply + confidence
     let reply: string;
+    let confidence: number;
     try {
-      reply = await this.aiAssistantService.generateReplyFromMessage({
+      ({ reply, confidence } = await this.aiAssistantService.generateReplyFromMessage({
         conversationId,
         latestUserMessage: lastMsg.text,
-      });
+        userId,
+      }));
     } catch (e) {
       this.logger.error(`[AI] auto-reply Ollama failed for conversation ${conversationId}`, e);
       throw new InternalServerErrorException('AI service unavailable');
     }
+
+    this.logger.log(
+      `[AI] manual auto-reply conversation=${conversationId} confidence=${confidence}%`,
+    );
 
     const { access_token, external_app_id } = conversation.platform_account;
 
@@ -142,7 +167,7 @@ export class AiAssistantController {
       this.logger.error(`[AI] Failed to send auto-reply via ${conversation.platform}`, e);
     }
 
-    // Save reply to DB
+    // Persist to DB
     const message = await this.prisma.messages.create({
       data: {
         conversation_id: conversationId,
@@ -155,6 +180,6 @@ export class AiAssistantController {
 
     this.chatGateway.emitNewMessage(userId, message);
 
-    return { reply };
+    return { reply, confidence };
   }
 }
