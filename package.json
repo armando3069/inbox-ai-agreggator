@@ -10,10 +10,15 @@
     "dev": "node -e \"const {execSync}=require('child_process');['3000','3001'].forEach(p=>{try{execSync('lsof -ti tcp:'+p+'|xargs kill -9',{stdio:'ignore'})}catch{}});\" && turbo run dev --parallel",
     "dev:web": "turbo run dev --filter=web",
     "dev:api": "turbo run dev --filter=api",
+    "dev:desktop": "npm run dev --workspace=apps/desktop",
+    "dev:web-desktop": "concurrently -k -n \"web,desktop\" -c \"cyan,magenta\" \"npm run dev:web\" \"npm run dev:desktop\"",
+    "build:icons": "npm run build:icons --workspace=apps/desktop",
+    "dist:desktop": "npm run dist --workspace=apps/desktop",
     "build": "turbo run build",
     "lint": "turbo run lint"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "turbo": "^2.8.10"
   }
 }
