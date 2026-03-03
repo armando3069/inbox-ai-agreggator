@@ -1,0 +1,54 @@
+{
+  "name": "desktop",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Zottis",
+  "description": "Zottis Desktop — Electron wrapper for the Next.js web app",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev":         "cross-env NODE_ENV=development electron src/dev-runner.js",
+    "build:icons": "bash scripts/build-icons.sh",
+    "build:ts":    "tsc",
+    "build":       "npm run build:icons && npm run build:ts",
+    "dist":        "npm run build && electron-builder",
+    "start":       "electron dist/main.js"
+  },
+  "build": {
+    "appId": "com.zottis.desktop",
+    "productName": "Zottis",
+    "electronVersion": "34.5.8",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "!assets/*.iconset",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }]
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Office",
+      "target": [{ "target": "AppImage", "arch": ["x64"] }]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "cross-env": "^7.0.3",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
