@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getMessages, subscribeToNewMessage } from "@/services/api/api";
 import { formatMessageTime } from "@/lib/chatUtils";
+import { notifyNewMessage } from "@/lib/notify";
 import type { ConversationViewModel, Message } from "@/lib/types";
 
 interface UseMessagesOptions {
@@ -65,6 +66,15 @@ export function useMessages({ selectedConversation, onPreviewUpdate }: UseMessag
         msg.text ?? "",
         formatMessageTime(msg.timestamp ?? msg.created_at)
       );
+
+      // Notify for incoming client messages (not our own bot/agent replies)
+      if (msg.sender_type === "client" && msg.text) {
+        notifyNewMessage({
+          platform: selectedConversation?.platform ?? "unknown",
+          contactName: selectedConversation?.contact ?? "Client",
+          textPreview: msg.text,
+        });
+      }
     });
 
     return () => {
