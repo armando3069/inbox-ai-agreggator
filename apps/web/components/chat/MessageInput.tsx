@@ -1,44 +1,62 @@
+"use client";
+
+import { useRef, useState, useEffect } from "react";
 import { Paperclip, Smile, Send, Zap, Tag } from "lucide-react";
 import { SuggestionsPanel } from "./SuggestionsPanel";
 
 interface MessageInputProps {
   value: string;
-  showSuggestions: boolean;
   suggestions: string[];
   isLoadingSuggestions: boolean;
   onValueChange: (value: string) => void;
-  onShowSuggestionsChange: (show: boolean) => void;
   onRefreshSuggestions: () => void;
   onSend: () => void;
 }
 
 export function MessageInput({
   value,
-  showSuggestions,
   suggestions,
   isLoadingSuggestions,
   onValueChange,
-  onShowSuggestionsChange,
   onRefreshSuggestions,
   onSend,
 }: MessageInputProps) {
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Close the panel when the user clicks outside the entire composer + panel area
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsSuggestionsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const handleSuggestiiAi = () => {
     onRefreshSuggestions();
-    onShowSuggestionsChange(true);
+    setIsSuggestionsOpen(true);
   };
 
   return (
-    <div className="p-4 border-t border-slate-200 bg-white">
-      {showSuggestions && (
+    <div ref={wrapperRef} className="p-4 border-t border-slate-200 bg-white">
+      {/* Suggestions panel with smooth collapse/expand animation */}
+      <div
+        className={`overflow-hidden transition-all duration-200 ease-in-out ${
+          isSuggestionsOpen ? "max-h-56 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+        }`}
+      >
         <SuggestionsPanel
           suggestions={suggestions}
           isLoading={isLoadingSuggestions}
           onSelect={(s) => {
+            // Insert text into input — keep panel open so the agent can pick another
             onValueChange(s);
-            onShowSuggestionsChange(false);
           }}
         />
-      )}
+      </div>
 
       <div className="flex items-end gap-3">
         <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
@@ -49,14 +67,14 @@ export function MessageInput({
           <textarea
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            onFocus={() => onShowSuggestionsChange(true)}
+            onFocus={() => setIsSuggestionsOpen(true)}
             placeholder="Scrie un mesaj..."
             className="w-full p-3 pr-10 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={2}
           />
           <button
             className="absolute right-3 bottom-3 p-1 hover:bg-slate-100 rounded-lg transition-colors"
-            onClick={() => onShowSuggestionsChange(!showSuggestions)}
+            onClick={() => setIsSuggestionsOpen((prev) => !prev)}
           >
             <Smile className="w-5 h-5 text-slate-600" />
           </button>

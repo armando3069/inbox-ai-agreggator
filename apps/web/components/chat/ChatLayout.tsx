@@ -15,7 +15,6 @@ export function ChatLayout() {
   const [selectedChannel, setSelectedChannel] = useState("all");
   const [selectedConversation, setSelectedConversation] = useState<ConversationViewModel | null>(null);
   const [messageInput, setMessageInput] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
@@ -137,11 +136,9 @@ export function ChatLayout() {
         messages={messages}
         isLoadingMessages={isLoadingMessages}
         messageInput={messageInput}
-        showSuggestions={showSuggestions}
         suggestions={suggestions}
         isLoadingSuggestions={isLoadingSuggestions}
         onMessageInputChange={setMessageInput}
-        onShowSuggestionsChange={setShowSuggestions}
         onRefreshSuggestions={() => {
           if (selectedConversation) refreshSuggestions(selectedConversation.id);
         }}
