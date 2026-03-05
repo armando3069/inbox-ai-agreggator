@@ -128,6 +128,12 @@ export function testAiReply(text: string): Promise<{ reply: string }> {
     return aiPost("ai-assistant/test-reply", { text });
 }
 
+export function getSuggestedReplies(
+    conversationId: number,
+): Promise<{ suggestions: string[] }> {
+    return aiGet(`ai-assistant/conversations/${conversationId}/suggested-replies`);
+}
+
 // ── Knowledge Base (REST) ─────────────────────────────────────────────────────
 
 export interface IndexedFile {
