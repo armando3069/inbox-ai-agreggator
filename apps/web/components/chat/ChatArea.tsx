@@ -1,4 +1,5 @@
 import type { ConversationViewModel, Message } from "@/lib/types";
+import type { ContactInfoPatch } from "@/services/api/api";
 import { ChatHeader } from "./ChatHeader";
 import { MessagesList } from "./MessagesList";
 import { MessageInput } from "./MessageInput";
@@ -13,6 +14,7 @@ interface ChatAreaProps {
   isLoadingSuggestions: boolean;
   onMessageInputChange: (value: string) => void;
   onRefreshSuggestions: () => void;
+  onUpdateConversation: (id: number, patch: ContactInfoPatch) => Promise<void>;
   onSend: () => void;
 }
 
@@ -25,6 +27,7 @@ export function ChatArea({
   isLoadingSuggestions,
   onMessageInputChange,
   onRefreshSuggestions,
+  onUpdateConversation,
   onSend,
 }: ChatAreaProps) {
   if (!conversation) {
@@ -37,7 +40,7 @@ export function ChatArea({
 
   return (
     <div className="flex-1 flex flex-col bg-white">
-      <ChatHeader conversation={conversation} />
+      <ChatHeader conversation={conversation} onUpdateConversation={onUpdateConversation} />
       <MessagesList
         messages={messages}
         isLoading={isLoadingMessages}
