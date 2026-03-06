@@ -9,6 +9,12 @@ export interface ConversationViewModel {
   category: string;
   entities: string[];
   avatar: string;
+  // Lifecycle & contact info
+  lifecycleStatus: string;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  contactCountry?: string | null;
+  contactLanguage?: string | null;
 }
 
 export interface Message {
