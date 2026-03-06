@@ -173,9 +173,7 @@ export function MessageInput({
             Auto-clasificare
           </button>
         </div>
-        <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-          Cmd + Enter pentru trimitere
-        </button>
+
       </div>
     </div>
   );
