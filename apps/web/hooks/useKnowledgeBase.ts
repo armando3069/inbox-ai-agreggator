@@ -1,13 +1,9 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import {
-  uploadKnowledgePdf,
-  askKnowledge,
-  getKnowledgeFiles,
-  clearKnowledge,
-  type IndexedFile,
-} from "@/services/api/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { knowledgeService, knowledgeQueryKeys } from "@/services/knowledge/knowledge.service";
+import type { IndexedFile } from "@/services/knowledge/knowledge.types";
 
 export type UploadStatus =
   | null
@@ -38,28 +34,38 @@ export interface UseKnowledgeBaseReturn {
 }
 
 export function useKnowledgeBase(): UseKnowledgeBaseReturn {
-  const [kbFiles, setKbFiles] = useState<IndexedFile[]>([]);
-  const [kbFilesLoading, setKbFilesLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data, isLoading: kbFilesLoading, refetch } = useQuery({
+    ...knowledgeQueryKeys.files(),
+  });
+  const kbFiles = data?.files ?? [];
+
+  const loadKbFiles = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>(null);
   const [kbQuestion, setKbQuestion] = useState("");
   const [kbAnswer, setKbAnswer] = useState<string | null>(null);
   const [kbAnswerLoading, setKbAnswerLoading] = useState(false);
   const [kbAnswerError, setKbAnswerError] = useState<string | null>(null);
-  const [clearingKb, setClearingKb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadKbFiles = useCallback(async () => {
-    setKbFilesLoading(true);
-    try {
-      const { files } = await getKnowledgeFiles();
-      setKbFiles(files);
-    } catch {
-      // Not critical
-    } finally {
-      setKbFilesLoading(false);
-    }
-  }, []);
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => knowledgeService.uploadPdf(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: knowledgeQueryKeys.files().queryKey });
+    },
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: () => knowledgeService.clear(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: knowledgeQueryKeys.files().queryKey });
+    },
+  });
 
   const handlePdfUpload = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".pdf")) {
@@ -68,10 +74,8 @@ export function useKnowledgeBase(): UseKnowledgeBaseReturn {
     }
     setUploadStatus({ state: "uploading", name: file.name });
     try {
-      const result = await uploadKnowledgePdf(file);
+      const result = await uploadMutation.mutateAsync(file);
       setUploadStatus({ state: "done", name: result.file, chunks: result.chunks });
-      const { files } = await getKnowledgeFiles();
-      setKbFiles(files);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Upload eșuat.";
       setUploadStatus({ state: "error", message: msg });
@@ -97,7 +101,7 @@ export function useKnowledgeBase(): UseKnowledgeBaseReturn {
     setKbAnswer(null);
     setKbAnswerError(null);
     try {
-      const { answer } = await askKnowledge(kbQuestion.trim());
+      const { answer } = await knowledgeService.ask(kbQuestion.trim());
       setKbAnswer(answer);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Eroare la generarea răspunsului.";
@@ -108,16 +112,12 @@ export function useKnowledgeBase(): UseKnowledgeBaseReturn {
   };
 
   const handleClearKb = async () => {
-    setClearingKb(true);
     try {
-      await clearKnowledge();
-      setKbFiles([]);
+      await clearMutation.mutateAsync();
       setKbAnswer(null);
       setUploadStatus(null);
     } catch {
       /* ignore */
-    } finally {
-      setClearingKb(false);
     }
   };
 
@@ -133,7 +133,7 @@ export function useKnowledgeBase(): UseKnowledgeBaseReturn {
     kbAnswer,
     kbAnswerLoading,
     kbAnswerError,
-    clearingKb,
+    clearingKb: clearMutation.isPending,
     fileInputRef,
     loadKbFiles,
     handlePdfUpload,

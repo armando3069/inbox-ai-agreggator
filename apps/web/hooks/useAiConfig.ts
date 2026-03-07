@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getAiConfig,
-  updateAiConfig,
-  type AiAssistantConfig,
-  type ResponseTone,
-} from "@/services/api/api";
+  aiAssistantService,
+  aiAssistantQueryKeys,
+} from "@/services/ai-assistant/ai-assistant.service";
+import type { AiAssistantConfig, AiAssistantConfigPatch, ResponseTone } from "@/services/ai-assistant/ai-assistant.types";
 
 export interface UseAiConfigReturn {
   configLoading: boolean;
@@ -17,69 +17,52 @@ export interface UseAiConfigReturn {
   configError: string | null;
   setToneState: (v: ResponseTone) => void;
   setThresholdState: (v: number) => void;
-  saveConfig: (
-    patch: Partial<
-      Pick<
-        AiAssistantConfig,
-        "autoReplyEnabled" | "responseTone" | "confidenceThreshold"
-      >
-    >,
-  ) => Promise<void>;
+  saveConfig: (patch: AiAssistantConfigPatch) => Promise<void>;
 }
 
 export function useAiConfig(): UseAiConfigReturn {
-  const [configLoading, setConfigLoading] = useState(true);
-  const [autoReply, setAutoReplyState] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: config, isLoading: configLoading } = useQuery({
+    ...aiAssistantQueryKeys.config(),
+    retry: false,
+  });
+
   const [tone, setToneState] = useState<ResponseTone>("professional");
   const [threshold, setThresholdState] = useState(70);
-  const [savingConfig, setSavingConfig] = useState(false);
-  const [configError, setConfigError] = useState<string | null>(null);
 
+  // Sync local controlled state from the loaded config
   useEffect(() => {
-    getAiConfig()
-      .then((cfg: AiAssistantConfig) => {
-        setAutoReplyState(cfg.autoReplyEnabled);
-        setToneState(cfg.responseTone);
-        setThresholdState(cfg.confidenceThreshold);
-      })
-      .catch(() => {
-        /* silently ignore — API may not be ready */
-      })
-      .finally(() => setConfigLoading(false));
-  }, []);
+    if (config) {
+      setToneState(config.responseTone);
+      setThresholdState(config.confidenceThreshold);
+    }
+  }, [config]);
+
+  const { mutateAsync, isPending: savingConfig, error: saveError } = useMutation({
+    mutationFn: (patch: AiAssistantConfigPatch) => aiAssistantService.updateConfig(patch),
+    onSuccess: (updated: AiAssistantConfig) => {
+      queryClient.setQueryData(aiAssistantQueryKeys.config().queryKey, updated);
+    },
+  });
 
   const saveConfig = useCallback(
-    async (
-      patch: Partial<
-        Pick<
-          AiAssistantConfig,
-          "autoReplyEnabled" | "responseTone" | "confidenceThreshold"
-        >
-      >,
-    ) => {
-      setSavingConfig(true);
-      setConfigError(null);
-      try {
-        const updated = await updateAiConfig(patch);
-        setAutoReplyState(updated.autoReplyEnabled);
-        setToneState(updated.responseTone);
-        setThresholdState(updated.confidenceThreshold);
-      } catch {
-        setConfigError("Nu s-a putut salva configurația. Încearcă din nou.");
-      } finally {
-        setSavingConfig(false);
-      }
+    async (patch: AiAssistantConfigPatch) => {
+      await mutateAsync(patch);
     },
-    [],
+    [mutateAsync],
   );
 
   return {
     configLoading,
-    autoReply,
+    autoReply: config?.autoReplyEnabled ?? false,
     tone,
     threshold,
     savingConfig,
-    configError,
+    configError:
+      saveError instanceof Error
+        ? "Nu s-a putut salva configurația. Încearcă din nou."
+        : null,
     setToneState,
     setThresholdState,
     saveConfig,
