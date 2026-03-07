@@ -17,8 +17,7 @@ import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-
-const FRONTEND = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+import { FRONTEND_URL } from '../common/constants';
 
 /** Google OAuth guard — redirects to /auth/login?error=... on failure. */
 @Injectable()
@@ -28,7 +27,7 @@ class GoogleGuard extends AuthGuard('google') {
       const reason = err?.message ?? info?.message ?? err?.code ?? 'oauth_failed';
       console.error('[GoogleGuard] auth failed — err:', err?.message ?? err, '| info:', info);
       const res = ctx.switchToHttp().getResponse<Response>();
-      res.redirect(`${FRONTEND}/auth/login?error=${encodeURIComponent(reason)}`);
+      res.redirect(`${FRONTEND_URL}/auth/login?error=${encodeURIComponent(reason)}`);
       return null;
     }
     return user;
@@ -70,7 +69,7 @@ export class AuthController {
   googleCallback(@Req() req: Request, @Res() res: Response) {
     if (res.headersSent || !req.user) return;
     const token = this.authService.loginOAuth(req.user as any);
-    res.redirect(`${FRONTEND}/auth/callback?token=${token}`);
+    res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
   }
 
   // ─── Microsoft OAuth ───────────────────────────────────────────────────────
@@ -83,7 +82,7 @@ export class AuthController {
   @UseGuards(AuthGuard('microsoft'))
   microsoftCallback(@Req() req: Request, @Res() res: Response) {
     const token = this.authService.loginOAuth(req.user as any);
-    res.redirect(`${FRONTEND}/auth/callback?token=${token}`);
+    res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
   }
 
   // ─── Protected route example ───────────────────────────────────────────────

@@ -11,7 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ChatGateway } from '../chat/chat.gateway';
 import { AiAssistantService } from '../ai-assistant/ai-assistant.service';
 import { ConnectWhatsappDto } from './dto/connect-whatsapp.dto';
-import { WhatsappReplyDto } from './dto/whatsapp-reply.dto';
+import { ReplyDto } from '../common/dto/reply.dto';
 import type { conversations, messages, platform_accounts } from '@prisma/client';
 
 // ── WhatsApp Cloud API payload shapes ─────────────────────────────────────────
@@ -160,7 +160,7 @@ export class WhatsappService {
 
   // ── Reply to an existing conversation ────────────────────────────────────
 
-  async reply(userId: number, dto: WhatsappReplyDto): Promise<messages> {
+  async reply(userId: number, dto: ReplyDto): Promise<messages> {
     const conversation = await this.prisma.conversations.findFirst({
       where: {
         id: dto.conversationId,

@@ -15,12 +15,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TelegramService } from './telegram.service';
 import type { TelegramUpdate } from './telegram.service';
 import { ConnectBotDto } from './dto/connect-bot.dto';
-import { ReplyDto } from './dto/reply.dto';
-
-// Shape injected by JwtStrategy.validate()
-interface AuthenticatedRequest {
-  user: { id: number; email: string; name: string | null; avatar: string | null };
-}
+import { ReplyDto } from '../common/dto/reply.dto';
+import type { AuthenticatedRequest } from '../common/types';
 
 @Controller('telegram')
 export class TelegramController {

@@ -15,12 +15,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WhatsappService } from './whatsapp.service';
 import type { WhatsAppWebhookPayload } from './whatsapp.service';
 import { ConnectWhatsappDto } from './dto/connect-whatsapp.dto';
-import { WhatsappReplyDto } from './dto/whatsapp-reply.dto';
+import { ReplyDto } from '../common/dto/reply.dto';
 import { TestSendDto } from './dto/test-send.dto';
-
-interface AuthenticatedRequest {
-  user: { id: number; email: string; name: string | null; avatar: string | null };
-}
+import type { AuthenticatedRequest } from '../common/types';
 
 @Controller()
 export class WhatsappController {
@@ -71,7 +68,7 @@ export class WhatsappController {
   @Post('whatsapp/reply')
   async reply(
     @Request() req: AuthenticatedRequest,
-    @Body() dto: WhatsappReplyDto,
+    @Body() dto: ReplyDto,
   ) {
     return this.whatsappService.reply(req.user.id, dto);
   }

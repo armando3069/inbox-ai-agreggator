@@ -7,9 +7,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService, TelegramUpdate } from './telegram.service';
+import { TELEGRAM_API_BASE } from '../common/constants';
 
 const POLL_INTERVAL_MS = 2_000; // 2 seconds between polls
-const TELEGRAM_API = 'https://api.telegram.org';
 
 @Injectable()
 export class TelegramPollingService implements OnModuleInit, OnModuleDestroy {
@@ -121,7 +121,7 @@ export class TelegramPollingService implements OnModuleInit, OnModuleDestroy {
     offset: number,
   ): Promise<TelegramUpdate[]> {
     const url =
-      `${TELEGRAM_API}/bot${token}/getUpdates` +
+      `${TELEGRAM_API_BASE}/bot${token}/getUpdates` +
       `?timeout=1&limit=100` +
       (offset > 0 ? `&offset=${offset}` : '');
 

@@ -1,6 +1,5 @@
 import type {AuthUser,SignupPayload,LoginPayload} from "@/services/auth/auth-types";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+import { API_URL } from "@/lib/config";
 const TOKEN_KEY = "auth_token";
 
 

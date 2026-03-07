@@ -32,16 +32,29 @@ export class ConversationsService {
     });
   }
 
+  /**
+   * Fetch a conversation with ownership verification.
+   * Throws NotFoundException if the conversation doesn't exist or doesn't belong to the user.
+   */
+  async getConversationForUser(
+    conversationId: number,
+    userId: number,
+    include?: { platform_account?: boolean; messages?: boolean },
+  ) {
+    const conversation = await this.prisma.conversations.findFirst({
+      where: { id: conversationId, platform_account: { user_id: userId } },
+      include,
+    });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+    return conversation;
+  }
+
   async updateContactInfo(
     id: number,
     userId: number,
     dto: UpdateContactInfoDto,
   ) {
-    // Verify the conversation belongs to the authenticated user
-    const existing = await this.prisma.conversations.findFirst({
-      where: { id, platform_account: { user_id: userId } },
-    });
-    if (!existing) throw new NotFoundException('Conversation not found');
+    await this.getConversationForUser(id, userId);
 
     const data: Prisma.conversationsUpdateInput = {};
     if (dto.lifecycleStatus !== undefined) data.lifecycle_status = dto.lifecycleStatus;

@@ -1,9 +1,8 @@
 "use client";
 
 import { getSocket } from "@/lib/socket";
-import { getToken } from "@/services/auth/auth-service";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { authHeaders } from "@/services/auth/auth-service";
+import { API_URL } from "@/lib/config";
 
 // ── Socket.IO request/response helper ────────────────────────────────────────
 
@@ -52,13 +51,12 @@ export async function sendReply(
     text: string,
     platform: string = "telegram",
 ): Promise<void> {
-    const token = getToken();
     const endpoint = platform === "whatsapp" ? "whatsapp/reply" : "telegram/reply";
     const res = await fetch(`${API_URL}/${endpoint}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...authHeaders(),
         },
         body: JSON.stringify({ conversationId, text }),
     });
@@ -72,12 +70,11 @@ export async function sendReply(
 // ── AI Assistant (REST) ───────────────────────────────────────────────────────
 
 async function aiPost<T>(path: string, body?: object): Promise<T> {
-    const token = getToken();
     const res = await fetch(`${API_URL}/${path}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...authHeaders(),
         },
         body: body ? JSON.stringify(body) : undefined,
     });
@@ -89,12 +86,11 @@ async function aiPost<T>(path: string, body?: object): Promise<T> {
 }
 
 async function apiPatch<T>(path: string, body?: object): Promise<T> {
-    const token = getToken();
     const res = await fetch(`${API_URL}/${path}`, {
         method: "PATCH",
         headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...authHeaders(),
         },
         body: body ? JSON.stringify(body) : undefined,
     });
@@ -106,9 +102,8 @@ async function apiPatch<T>(path: string, body?: object): Promise<T> {
 }
 
 async function aiGet<T>(path: string): Promise<T> {
-    const token = getToken();
     const res = await fetch(`${API_URL}/${path}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders(),
     });
     if (!res.ok) throw new Error(`GET ${path} failed`);
     return res.json() as Promise<T>;
@@ -219,13 +214,12 @@ export interface IndexedFile {
 export async function uploadKnowledgePdf(
     file: File,
 ): Promise<{ success: boolean; chunks: number; file: string }> {
-    const token = getToken();
     const formData = new FormData();
     formData.append("file", file);
     const res = await fetch(`${API_URL}/knowledge/upload`, {
         method: "POST",
         // Do NOT set Content-Type — browser sets multipart/form-data + boundary automatically
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders(),
         body: formData,
     });
     if (!res.ok) {
@@ -246,10 +240,9 @@ export function getKnowledgeFiles(): Promise<{ files: IndexedFile[] }> {
 }
 
 export async function clearKnowledge(): Promise<void> {
-    const token = getToken();
     const res = await fetch(`${API_URL}/knowledge/clear`, {
         method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders(),
     });
     if (!res.ok) throw new Error("Failed to clear knowledge base");
 }

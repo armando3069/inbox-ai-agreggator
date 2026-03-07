@@ -20,10 +20,7 @@ import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { KnowledgeBaseService, IndexedFile } from './knowledge-base.service';
 import { AskQuestionDto } from './dto/ask-question.dto';
-
-interface AuthenticatedRequest extends Request {
-  user: { id: number; email: string };
-}
+import type { AuthenticatedRequest } from '../common/types';
 
 @Controller('knowledge')
 @UseGuards(JwtAuthGuard)

@@ -1,10 +1,7 @@
 import { Controller, Get, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TelegramService } from './telegram.service';
-
-interface AuthenticatedRequest {
-  user: { id: number };
-}
+import type { AuthenticatedRequest } from '../common/types';
 
 /**
  * GET /platform-accounts

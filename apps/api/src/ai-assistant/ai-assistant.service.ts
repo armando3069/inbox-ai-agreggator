@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { KnowledgeBaseService } from '../knowledge-base/knowledge-base.service';
+import { OLLAMA_DEFAULTS, SUGGESTIONS_CACHE_TTL_MS } from '../common/constants';
 import { ResponseTone, UpdateConfigDto } from './dto/update-config.dto';
 import { TranslateDto } from './dto/translate.dto';
 
@@ -94,8 +95,8 @@ export class AiAssistantService {
   // ── Ollama HTTP helper ─────────────────────────────────────────────────────
 
   private async callOllama(messages: OllamaMessage[]): Promise<string> {
-    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? 'http://localhost:11434';
-    const model = this.config.get<string>('OLLAMA_MODEL') ?? 'qwen2.5:7b';
+    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? OLLAMA_DEFAULTS.url;
+    const model = this.config.get<string>('OLLAMA_MODEL') ?? OLLAMA_DEFAULTS.model;
 
     const res = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -200,7 +201,7 @@ export class AiAssistantService {
           const suggestions = (parsed.suggestions as string[]).slice(0, 4);
           this.suggestionsCache.set(conversationId, {
             suggestions,
-            expiresAt: now + 30_000,
+            expiresAt: now + SUGGESTIONS_CACHE_TTL_MS,
             lastMessageId: latestId,
           });
           this.logger.log(`[AI] suggested-replies generated for conversation=${conversationId}`);

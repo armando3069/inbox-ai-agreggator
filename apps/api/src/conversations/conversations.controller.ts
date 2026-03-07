@@ -14,10 +14,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ConversationsService } from './conversations.service';
 import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
-
-interface AuthenticatedRequest extends Request {
-  user: { id: number; email: string };
-}
+import type { AuthenticatedRequest } from '../common/types';
 
 @Controller('conversations')
 @UseGuards(JwtAuthGuard)
