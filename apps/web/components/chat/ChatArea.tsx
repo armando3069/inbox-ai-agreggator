@@ -1,5 +1,5 @@
 import type { ConversationViewModel, Message } from "@/lib/types";
-import type { ContactInfoPatch } from "@/services/api/api";
+import type { ContactInfoPatch } from "@/services/conversations/conversations.types";
 import { ChatHeader } from "./ChatHeader";
 import { MessagesList } from "./MessagesList";
 import { MessageInput } from "./MessageInput";

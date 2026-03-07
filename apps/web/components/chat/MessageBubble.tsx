@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { CheckCheck, Languages } from "lucide-react";
 import type { Message } from "@/lib/types";
 import { formatMessageTime } from "@/lib/chatUtils";
-import { translateMessage } from "@/services/api/api";
+import { aiAssistantService } from "@/services/ai-assistant/ai-assistant.service";
 import { MessageActions } from "./MessageActions";
 
 interface Translation {
@@ -39,7 +39,7 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
     }
     setIsTranslating(true);
     try {
-      const result = await translateMessage({
+      const result = await aiAssistantService.translate({
         text: message.text,
         targetLanguage: langName,
         messageId: String(message.id),

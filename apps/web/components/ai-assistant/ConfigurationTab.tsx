@@ -9,7 +9,8 @@ import {
   SlidersHorizontal,
   ShieldAlert,
 } from "lucide-react";
-import { testAiReply, type ResponseTone } from "@/services/api/api";
+import { aiAssistantService } from "@/services/ai-assistant/ai-assistant.service";
+import type { ResponseTone } from "@/services/ai-assistant/ai-assistant.types";
 import type { UseAiConfigReturn } from "@/hooks/useAiConfig";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -182,7 +183,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
     setTestReplyText(null);
     setTestError(null);
     try {
-      const { reply } = await testAiReply(testInput.trim());
+      const { reply } = await aiAssistantService.testReply(testInput.trim());
       setTestReplyText(reply);
     } catch {
       setTestError("AI-ul nu este disponibil momentan. Verifică că Ollama rulează.");

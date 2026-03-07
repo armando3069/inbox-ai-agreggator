@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { ConversationViewModel } from "@/lib/types";
-import type { ContactInfoPatch } from "@/services/api/api";
+import type { ContactInfoPatch } from "@/services/conversations/conversations.types";
 
 interface ContactFormState {
   email:    string;

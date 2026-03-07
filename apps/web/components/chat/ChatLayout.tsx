@@ -4,8 +4,11 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useConversations } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
 import { buildChannels } from "@/lib/chatUtils";
-import { sendReply, subscribeToNewMessage, getSuggestedReplies, updateContactInfo } from "@/services/api/api";
-import type { ContactInfoPatch } from "@/services/api/api";
+import { messagesService } from "@/services/messages/messages.service";
+import { conversationsService } from "@/services/conversations/conversations.service";
+import { aiAssistantService } from "@/services/ai-assistant/ai-assistant.service";
+import { subscribeToNewMessage } from "@/services/api/api";
+import type { ContactInfoPatch } from "@/services/conversations/conversations.types";
 import { notifyNewMessage } from "@/lib/notify";
 import type { ConversationViewModel, Message } from "@/lib/types";
 import { Sidebar } from "./Sidebar";
@@ -36,7 +39,7 @@ export function ChatLayout() {
   const refreshSuggestions = useCallback(async (convId: number) => {
     setIsLoadingSuggestions(true);
     try {
-      const { suggestions: s } = await getSuggestedReplies(convId);
+      const { suggestions: s } = await aiAssistantService.getSuggestedReplies(convId);
       setSuggestions(s);
     } catch {
       // silently ignore — suggestions panel keeps previous data
@@ -45,11 +48,9 @@ export function ChatLayout() {
     }
   }, []);
 
-  // Stable ref so handlePreviewUpdate can access it without re-creating
   const refreshSuggestionsRef = useRef(refreshSuggestions);
   useEffect(() => { refreshSuggestionsRef.current = refreshSuggestions; });
 
-  // Refresh when selected conversation changes
   useEffect(() => {
     if (!selectedConversation) {
       setSuggestions([]);
@@ -60,8 +61,6 @@ export function ChatLayout() {
 
   // ── Conversation list preview update ────────────────────────────────────
 
-  // Stable callback: updates a conversation's preview in the list when a message arrives.
-  // Also refreshes suggestions if the message belongs to the selected conversation.
   const selectedConvRef = useRef(selectedConversation);
   useEffect(() => { selectedConvRef.current = selectedConversation; });
 
@@ -70,7 +69,6 @@ export function ChatLayout() {
       setConversations((prev) =>
         prev.map((c) => (c.id === conversationId ? { ...c, lastMessage, time } : c))
       );
-      // Refresh suggestions when a new message arrives in the active conversation
       if (selectedConvRef.current?.id === conversationId) {
         refreshSuggestionsRef.current(conversationId);
       }
@@ -88,7 +86,6 @@ export function ChatLayout() {
   const conversationsRef = useRef(conversations);
   useEffect(() => { conversationsRef.current = conversations; });
 
-  // Notify for client messages in conversations OTHER than the selected one
   useEffect(() => {
     const unsub = subscribeToNewMessage((msg: Message) => {
       if (msg.sender_type !== "client" || !msg.text) return;
@@ -119,17 +116,16 @@ export function ChatLayout() {
 
   const handleUpdateConversation = useCallback(
     async (id: number, patch: ContactInfoPatch) => {
-      const updated = await updateContactInfo(id, patch);
-      // Merge returned fields into local state
+      const updated = await conversationsService.updateContactInfo(id, patch);
       const merge = (conv: typeof selectedConversation) => {
         if (!conv || conv.id !== id) return conv;
         return {
           ...conv,
-          lifecycleStatus: (updated as Record<string, unknown>).lifecycle_status as string ?? conv.lifecycleStatus,
-          contactEmail:    (updated as Record<string, unknown>).contact_email    as string | null ?? conv.contactEmail,
-          contactPhone:    (updated as Record<string, unknown>).contact_phone    as string | null ?? conv.contactPhone,
-          contactCountry:  (updated as Record<string, unknown>).contact_country  as string | null ?? conv.contactCountry,
-          contactLanguage: (updated as Record<string, unknown>).contact_language as string | null ?? conv.contactLanguage,
+          lifecycleStatus: updated.lifecycle_status ?? conv.lifecycleStatus,
+          contactEmail: updated.contact_email ?? conv.contactEmail,
+          contactPhone: updated.contact_phone ?? conv.contactPhone,
+          contactCountry: updated.contact_country ?? conv.contactCountry,
+          contactLanguage: updated.contact_language ?? conv.contactLanguage,
         };
       };
       setSelectedConversation((prev) => merge(prev));
@@ -145,8 +141,11 @@ export function ChatLayout() {
     const text = messageInput.trim();
     setMessageInput("");
     try {
-      await sendReply(selectedConversation.id, text, selectedConversation.platform);
-      // The sent message is received via the "newMessage" subscription in useMessages.
+      await messagesService.sendReply(
+        selectedConversation.id,
+        text,
+        selectedConversation.platform,
+      );
     } catch (e) {
       console.error("sendReply error", e);
     }

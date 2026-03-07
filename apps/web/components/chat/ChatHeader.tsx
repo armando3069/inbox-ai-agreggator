@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Star, Archive, Pencil } from "lucide-react";
 import type { ConversationViewModel } from "@/lib/types";
-import type { ContactInfoPatch } from "@/services/api/api";
+import type { ContactInfoPatch } from "@/services/conversations/conversations.types";
 import { AvatarWithPlatformBadge } from "./AvatarWithPlatformBadge";
 import { LifecycleDropdown } from "./LifecycleDropdown";
 import { EditContactModal } from "./EditContactModal";
