@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { OLLAMA_DEFAULTS } from '../common/constants';
 
 // pdf-parse v1 exports the parse function directly via module.exports
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -123,7 +124,7 @@ export class KnowledgeBaseService {
   // ── Ollama embeddings ─────────────────────────────────────────────────────
 
   private async embedText(text: string): Promise<EmbeddingVector> {
-    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? 'http://localhost:11434';
+    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? OLLAMA_DEFAULTS.url;
     const embedModel =
       this.config.get<string>('OLLAMA_EMBED_MODEL') ?? 'nomic-embed-text';
 
@@ -263,8 +264,8 @@ export class KnowledgeBaseService {
     const userMessage = `Context:\n${contextText}\n\nÎntrebare: "${question}"`;
 
     // 3. Generate answer
-    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? 'http://localhost:11434';
-    const model = this.config.get<string>('OLLAMA_MODEL') ?? 'qwen2.5:7b';
+    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? OLLAMA_DEFAULTS.url;
+    const model = this.config.get<string>('OLLAMA_MODEL') ?? OLLAMA_DEFAULTS.model;
 
     const res = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',

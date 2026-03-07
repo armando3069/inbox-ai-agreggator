@@ -24,10 +24,7 @@ import { TestReplyDto } from './dto/test-reply.dto';
 import { AutoReplyToggleDto } from './dto/auto-reply-toggle.dto';
 import { UpdateConfigDto } from './dto/update-config.dto';
 import { TranslateDto } from './dto/translate.dto';
-
-interface AuthenticatedRequest extends Request {
-  user: { id: number; email: string };
-}
+import type { AuthenticatedRequest } from '../common/types';
 
 @Controller('ai-assistant')
 @UseGuards(JwtAuthGuard)

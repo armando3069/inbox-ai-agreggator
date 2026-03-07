@@ -13,12 +13,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { CORS_CONFIG } from '../common/constants';
 import type { conversations, messages } from '@prisma/client';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from '../common/types';
 
 /**
  * WebSocket gateway for real-time messaging.
@@ -43,10 +40,7 @@ interface JwtPayload {
  * Outbound replies go through the REST endpoint POST /telegram/reply, not WS.
  */
 @WebSocketGateway({
-  cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
-    credentials: true,
-  },
+  cors: CORS_CONFIG,
 })
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect

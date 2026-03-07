@@ -2,37 +2,9 @@
 
 import { useRef, useState, useEffect } from "react";
 import { Search } from "lucide-react";
+import { ALL_LANGS, PINNED_LANG_CODES, findLangByCode, type Lang } from "@/lib/languages";
 
-// ── Language registry ─────────────────────────────────────────────────────────
-
-interface Lang { code: string; name: string; flag: string }
-
-const ALL_LANGS: Lang[] = [
-  { code: "ro", name: "Română",     flag: "🇷🇴" },
-  { code: "en", name: "English",    flag: "🇬🇧" },
-  { code: "fr", name: "Français",   flag: "🇫🇷" },
-  { code: "it", name: "Italiano",   flag: "🇮🇹" },
-  { code: "ar", name: "العربية",    flag: "🇸🇦" },
-  { code: "de", name: "Deutsch",    flag: "🇩🇪" },
-  { code: "es", name: "Español",    flag: "🇪🇸" },
-  { code: "pt", name: "Português",  flag: "🇵🇹" },
-  { code: "ru", name: "Русский",    flag: "🇷🇺" },
-  { code: "zh", name: "中文",        flag: "🇨🇳" },
-  { code: "ja", name: "日本語",      flag: "🇯🇵" },
-  { code: "ko", name: "한국어",      flag: "🇰🇷" },
-  { code: "nl", name: "Nederlands", flag: "🇳🇱" },
-  { code: "pl", name: "Polski",     flag: "🇵🇱" },
-  { code: "tr", name: "Türkçe",     flag: "🇹🇷" },
-  { code: "uk", name: "Українська", flag: "🇺🇦" },
-  { code: "cs", name: "Čeština",    flag: "🇨🇿" },
-  { code: "sv", name: "Svenska",    flag: "🇸🇪" },
-  { code: "hu", name: "Magyar",     flag: "🇭🇺" },
-  { code: "el", name: "Ελληνικά",   flag: "🇬🇷" },
-  { code: "bg", name: "Български",  flag: "🇧🇬" },
-  { code: "hr", name: "Hrvatski",   flag: "🇭🇷" },
-];
-
-const PINNED_CODES = ["ro", "en", "fr", "it", "ar"];
+const PINNED_CODES = PINNED_LANG_CODES;
 const STORAGE_KEY  = "recentTranslateLangs";
 
 function getRecentCodes(): string[] {
@@ -45,9 +17,7 @@ function saveRecentCode(code: string): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }
 
-function byCode(code: string): Lang | undefined {
-  return ALL_LANGS.find((l) => l.code === code);
-}
+const byCode = findLangByCode;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 

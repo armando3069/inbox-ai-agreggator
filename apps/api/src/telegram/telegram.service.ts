@@ -13,8 +13,9 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChatGateway } from '../chat/chat.gateway';
 import { AiAssistantService } from '../ai-assistant/ai-assistant.service';
+import { TELEGRAM_API_BASE } from '../common/constants';
 import { ConnectBotDto } from './dto/connect-bot.dto';
-import { ReplyDto } from './dto/reply.dto';
+import { ReplyDto } from '../common/dto/reply.dto';
 import type { Prisma, conversations, messages, platform_accounts } from '@prisma/client';
 
 // ── Telegram API shapes ───────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ export type PlatformAccountSafe = Omit<platform_accounts, 'access_token'>;
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
-  private readonly TELEGRAM_API = 'https://api.telegram.org';
+  private readonly TELEGRAM_API = TELEGRAM_API_BASE;
 
   constructor(
     private readonly prisma: PrismaService,

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { CORS_CONFIG } from './common/constants';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log', 'debug', 'warn', 'error'] });
@@ -16,14 +17,7 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors({
-    origin: [
-      'http://localhost:3000',
-    ],
-    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
-    credentials: true,
-  });
+  app.enableCors(CORS_CONFIG);
 
   await app.listen(3001);
 }
