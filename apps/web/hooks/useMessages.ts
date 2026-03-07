@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getMessages, subscribeToNewMessage } from "@/services/api/api";
+import { getMessages, subscribeToNewMessage } from "@/services/ws/ws";
 import { formatMessageTime } from "@/lib/chatUtils";
 import { notifyNewMessage } from "@/lib/notify";
 import type { ConversationViewModel, Message } from "@/lib/types";

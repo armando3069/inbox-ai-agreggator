@@ -7,7 +7,7 @@ import { buildChannels } from "@/lib/chatUtils";
 import { messagesService } from "@/services/messages/messages.service";
 import { conversationsService } from "@/services/conversations/conversations.service";
 import { aiAssistantService } from "@/services/ai-assistant/ai-assistant.service";
-import { subscribeToNewMessage } from "@/services/api/api";
+import { subscribeToNewMessage } from "@/services/ws/ws";
 import type { ContactInfoPatch } from "@/services/conversations/conversations.types";
 import { notifyNewMessage } from "@/lib/notify";
 import type { ConversationViewModel, Message } from "@/lib/types";

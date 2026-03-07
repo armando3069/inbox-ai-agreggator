@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getConversations, subscribeToNewConversation } from "@/services/api/api";
+import { getConversations, subscribeToNewConversation } from "@/services/ws/ws";
 import { mapConversationToViewModel } from "@/lib/chatUtils";
 import type { ConversationViewModel } from "@/lib/types";
 
