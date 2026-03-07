@@ -23,4 +23,4 @@ export const OLLAMA_DEFAULTS = {
 } as const;
 
 // ── Caching ───────────────────────────────────────────────────────────────────
-export const SUGGESTIONS_CACHE_TTL_MS = 30_000;
+export const SUGGESTIONS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes

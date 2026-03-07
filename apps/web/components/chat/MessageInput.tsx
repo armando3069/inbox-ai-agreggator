@@ -17,8 +17,13 @@ interface MessageInputProps {
   value: string;
   suggestions: string[];
   isLoadingSuggestions: boolean;
+  /** Controlled by parent — true when the suggestions panel is open */
+  isSuggestionsOpen: boolean;
   onValueChange: (value: string) => void;
-  onRefreshSuggestions: () => void;
+  /** Open panel + fetch (if closed) OR close panel (if open) */
+  onToggleSuggestions: () => void;
+  /** Close the panel only — used by the click-outside handler */
+  onCloseSuggestions: () => void;
   onSend: () => void;
 }
 
@@ -26,23 +31,23 @@ export function MessageInput({
   value,
   suggestions,
   isLoadingSuggestions,
+  isSuggestionsOpen,
   onValueChange,
-  onRefreshSuggestions,
+  onToggleSuggestions,
+  onCloseSuggestions,
   onSend,
 }: MessageInputProps) {
-  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Close suggestions when clicking outside wrapper.
-  // Close emoji picker when clicking outside the picker itself (but still inside wrapper).
+  // Close suggestions (and emoji picker) when clicking outside the composer
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsSuggestionsOpen(false);
+        onCloseSuggestions();
         setIsEmojiOpen(false);
         return;
       }
@@ -56,7 +61,7 @@ export function MessageInput({
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [isEmojiOpen]);
+  }, [isEmojiOpen, onCloseSuggestions]);
 
   // Insert the selected emoji at the current cursor position
   const handleEmojiSelect = (emoji: EmojiSelection) => {
@@ -73,17 +78,11 @@ export function MessageInput({
     const newValue = value.slice(0, start) + char + value.slice(end);
     onValueChange(newValue);
 
-    // Restore focus and move cursor after the inserted emoji
     setTimeout(() => {
       textarea.focus();
       const pos = start + char.length;
       textarea.setSelectionRange(pos, pos);
     }, 0);
-  };
-
-  const handleSuggestiiAi = () => {
-    onRefreshSuggestions();
-    setIsSuggestionsOpen(true);
   };
 
   return (
@@ -99,7 +98,7 @@ export function MessageInput({
           isLoading={isLoadingSuggestions}
           onSelect={(s) => {
             onValueChange(s);
-            // Keep panel open — agent can pick another or edit
+            // Keep panel open so the agent can pick another or edit
           }}
         />
       </div>
@@ -115,7 +114,6 @@ export function MessageInput({
             ref={textareaRef}
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            onFocus={() => setIsSuggestionsOpen(true)}
             placeholder="Scrie un mesaj..."
             className="w-full p-3 pr-10 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={2}
@@ -161,19 +159,25 @@ export function MessageInput({
 
       <div className="flex items-center justify-between mt-2 px-2">
         <div className="flex items-center gap-4 text-xs text-slate-500">
+
+          {/* "Sugestii AI" toggle button — active state shows blue chip */}
           <button
-            onClick={handleSuggestiiAi}
-            className="hover:text-blue-600 transition-colors flex items-center gap-1"
+            onClick={onToggleSuggestions}
+            className={`flex items-center gap-1 transition-colors rounded-md px-1.5 py-0.5 ${
+              isSuggestionsOpen
+                ? "text-blue-600 bg-blue-50 font-medium"
+                : "hover:text-blue-600"
+            }`}
           >
-            <Zap className="w-3 h-3" />
+            <Zap className={`w-3 h-3 ${isSuggestionsOpen ? "fill-blue-600" : ""}`} />
             Sugestii AI
           </button>
+
           <button className="hover:text-blue-600 transition-colors flex items-center gap-1">
             <Tag className="w-3 h-3" />
             Auto-clasificare
           </button>
         </div>
-
       </div>
     </div>
   );

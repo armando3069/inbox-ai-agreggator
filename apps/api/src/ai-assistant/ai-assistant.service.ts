@@ -51,10 +51,14 @@ export class AiAssistantService {
   /** Per-user configuration. Resets on restart (in-memory only). */
   private readonly configs = new Map<number, AiAssistantConfig>();
 
-  /** Suggested-replies cache: invalidated when the latest message changes or after 30 s. */
+  /**
+   * Suggested-replies cache keyed by `"${conversationId}:${lastMessageId}"`.
+   * A new message always produces a new key, so stale entries are naturally
+   * bypassed without any explicit invalidation.
+   */
   private readonly suggestionsCache = new Map<
-    number,
-    { suggestions: string[]; expiresAt: number; lastMessageId: number }
+    string,
+    { suggestions: string[]; expiresAt: number }
   >();
 
   constructor(
@@ -166,9 +170,11 @@ export class AiAssistantService {
 
     const latestId = rows[0].id;
 
-    // Return cached result if still fresh AND last message hasn't changed
-    const hit = this.suggestionsCache.get(conversationId);
-    if (hit && hit.expiresAt > now && hit.lastMessageId === latestId) {
+    // Return cached result if still fresh (key encodes lastMessageId, so a new
+    // message automatically bypasses the old entry without any explicit eviction)
+    const cacheKey = `${conversationId}:${latestId}`;
+    const hit = this.suggestionsCache.get(cacheKey);
+    if (hit && hit.expiresAt > now) {
       return hit.suggestions;
     }
 
@@ -199,10 +205,9 @@ export class AiAssistantService {
         const parsed = JSON.parse(jsonMatch[0]) as { suggestions?: unknown };
         if (Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
           const suggestions = (parsed.suggestions as string[]).slice(0, 4);
-          this.suggestionsCache.set(conversationId, {
+          this.suggestionsCache.set(cacheKey, {
             suggestions,
             expiresAt: now + SUGGESTIONS_CACHE_TTL_MS,
-            lastMessageId: latestId,
           });
           this.logger.log(`[AI] suggested-replies generated for conversation=${conversationId}`);
           return suggestions;

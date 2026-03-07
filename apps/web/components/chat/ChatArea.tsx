@@ -12,8 +12,10 @@ interface ChatAreaProps {
   messageInput: string;
   suggestions: string[];
   isLoadingSuggestions: boolean;
+  isSuggestionsOpen: boolean;
   onMessageInputChange: (value: string) => void;
-  onRefreshSuggestions: () => void;
+  onToggleSuggestions: () => void;
+  onCloseSuggestions: () => void;
   onUpdateConversation: (id: number, patch: ContactInfoPatch) => Promise<void>;
   onSend: () => void;
 }
@@ -25,8 +27,10 @@ export function ChatArea({
   messageInput,
   suggestions,
   isLoadingSuggestions,
+  isSuggestionsOpen,
   onMessageInputChange,
-  onRefreshSuggestions,
+  onToggleSuggestions,
+  onCloseSuggestions,
   onUpdateConversation,
   onSend,
 }: ChatAreaProps) {
@@ -50,8 +54,10 @@ export function ChatArea({
         value={messageInput}
         suggestions={suggestions}
         isLoadingSuggestions={isLoadingSuggestions}
+        isSuggestionsOpen={isSuggestionsOpen}
         onValueChange={onMessageInputChange}
-        onRefreshSuggestions={onRefreshSuggestions}
+        onToggleSuggestions={onToggleSuggestions}
+        onCloseSuggestions={onCloseSuggestions}
         onSend={onSend}
       />
     </div>

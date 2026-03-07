@@ -44,8 +44,8 @@ export const aiAssistantQueryKeys = createQueryKeys("aiAssistant", {
     queryKey: ["autoReplyStatus"],
     queryFn: () => aiAssistantService.getAutoReplyStatus(),
   }),
-  suggestedReplies: (conversationId: number) => ({
-    queryKey: ["suggestedReplies", conversationId],
+  suggestedReplies: (conversationId: number, lastMessageId: number) => ({
+    queryKey: ["suggestedReplies", conversationId, lastMessageId],
     queryFn: () => aiAssistantService.getSuggestedReplies(conversationId),
   }),
 });
