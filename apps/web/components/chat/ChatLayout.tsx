@@ -12,7 +12,6 @@ import { subscribeToNewMessage } from "@/services/ws/ws";
 import type { ContactInfoPatch } from "@/services/conversations/conversations.types";
 import { notifyNewMessage } from "@/lib/notify";
 import type { ConversationViewModel, Message } from "@/lib/types";
-import { Sidebar } from "./Sidebar";
 import { ConversationList } from "./ConversationList";
 import { ChatArea } from "./ChatArea";
 
@@ -62,13 +61,6 @@ export function ChatLayout() {
   });
 
   // ── Suggested replies (lazy / manual mode) ───────────────────────────────
-  //
-  // enabled: false  →  never auto-fetches (no tokens spent on mount, tab switch,
-  //                    conversation load, or window focus)
-  //
-  // The query key includes lastMessageId so a future manual click after a new
-  // message arrives will automatically hit the backend with the right context.
-  // If lastMessageId is unchanged, the cached result is served (staleTime 10 min).
 
   const lastMessageId = messages[messages.length - 1]?.id ?? 0;
   const conversationId = selectedConversation?.id ?? 0;
@@ -89,9 +81,6 @@ export function ChatLayout() {
 
   const suggestions = suggestionsData?.suggestions ?? [];
 
-  // Toggle handler for the "Sugestii AI" button:
-  // • first click  → open panel + fetch (or serve cache if lastMessageId unchanged)
-  // • second click → close panel only, no fetch
   const handleToggleSuggestions = useCallback(() => {
     if (isSuggestionsOpen) {
       setIsSuggestionsOpen(false);
@@ -116,7 +105,6 @@ export function ChatLayout() {
   useEffect(() => {
     const unsub = subscribeToNewMessage((msg: Message) => {
       if (msg.sender_type !== "client" || !msg.text) return;
-      // Skip the currently open conversation — useMessages handles its preview
       if (selectedConvRef.current?.id === msg.conversation_id) return;
 
       const conv = conversationsRef.current.find((c) => c.id === msg.conversation_id);
@@ -128,7 +116,6 @@ export function ChatLayout() {
         });
       }
 
-      // Update preview + increment unread badge in local state
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id !== msg.conversation_id) return c;
@@ -177,21 +164,15 @@ export function ChatLayout() {
   );
 
   // ── Mark selected conversation as read ───────────────────────────────────
-  //
-  // Runs whenever the selected conversation changes. Uses conversationsRef so
-  // the effect only re-runs on ID change — no stale-closure issues with the
-  // conversations array.
 
   useEffect(() => {
     if (!selectedConversation) return;
     const conv = conversationsRef.current.find((c) => c.id === selectedConversation.id);
     if (!conv || conv.unread === 0) return;
 
-    // Optimistic: clear badge immediately
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
     );
-    // Persist to backend (fire-and-forget)
     conversationsService.markAsRead(conv.id).catch((e) =>
       console.error("markAsRead error", e)
     );
@@ -216,17 +197,15 @@ export function ChatLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <Sidebar
-        channels={channels}
-        selectedChannel={selectedChannel}
-        onSelectChannel={setSelectedChannel}
-      />
+    <div className="flex-1 flex overflow-hidden">
       <ConversationList
         conversations={filteredConversations}
         selectedConversation={selectedConversation}
         isLoading={isLoadingConversations}
         conversationFilter={conversationFilter}
+        channels={channels}
+        selectedChannel={selectedChannel}
+        onSelectChannel={setSelectedChannel}
         onSelectConversation={setSelectedConversation}
         onFilterChange={setConversationFilter}
       />

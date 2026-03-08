@@ -25,7 +25,7 @@ export function ChatHeader({ conversation, onUpdateConversation }: ChatHeaderPro
 
   return (
     <>
-      <div className="p-4 border-b border-slate-200 bg-white">
+      <div className="px-5 py-3.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
         <div className="flex items-center justify-between gap-3">
           {/* Left — avatar + name + platform */}
           <div className="flex items-center gap-3 min-w-0">
@@ -36,8 +36,8 @@ export function ChatHeader({ conversation, onUpdateConversation }: ChatHeaderPro
               size="md"
             />
             <div className="w-full">
-              <h3 className="font-semibold text-slate-800 truncate">{conversation.contact}</h3>
-              <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+              <h3 className="font-medium text-[15px] text-[var(--text-primary)] truncate">{conversation.contact}</h3>
+              <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] flex-wrap">
                 <LifecycleDropdown
                     current={conversation.lifecycleStatus ?? "NEW_LEAD"}
                     onSelect={handleLifecycleChange}
@@ -46,21 +46,21 @@ export function ChatHeader({ conversation, onUpdateConversation }: ChatHeaderPro
             </div>
           </div>
 
-          {/* Right — lifecycle badge + edit contact + star + archive */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Right — edit contact + star + archive */}
+          <div className="flex items-center gap-1 flex-shrink-0">
             <button
               onClick={() => setIsEditOpen(true)}
               title="Edit Contact Info"
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--bg-surface-hover)] rounded-[var(--radius-badge)] transition-colors"
             >
-              <Pencil className="w-4 h-4 text-slate-500" />
+              <Pencil className="w-4 h-4 text-[var(--text-tertiary)]" />
             </button>
 
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <Star className="w-5 h-5 text-slate-600" />
+            <button className="p-2 hover:bg-[var(--bg-surface-hover)] rounded-[var(--radius-badge)] transition-colors">
+              <Star className="w-4 h-4 text-[var(--text-tertiary)]" />
             </button>
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <Archive className="w-5 h-5 text-slate-600" />
+            <button className="p-2 hover:bg-[var(--bg-surface-hover)] rounded-[var(--radius-badge)] transition-colors">
+              <Archive className="w-4 h-4 text-[var(--text-tertiary)]" />
             </button>
           </div>
         </div>

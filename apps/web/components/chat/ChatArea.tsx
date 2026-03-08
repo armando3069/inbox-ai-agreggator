@@ -36,14 +36,14 @@ export function ChatArea({
 }: ChatAreaProps) {
   if (!conversation) {
     return (
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-[var(--bg-surface)]">
         <EmptyState />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col bg-[var(--bg-surface)]">
       <ChatHeader conversation={conversation} onUpdateConversation={onUpdateConversation} />
       <MessagesList
         messages={messages}

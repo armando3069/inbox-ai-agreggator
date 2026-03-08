@@ -3,14 +3,14 @@ import { PlatformIcon } from "./PlatformIcon";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
-  "bg-blue-500",
-  "bg-violet-500",
-  "bg-emerald-500",
-  "bg-rose-500",
-  "bg-amber-500",
-  "bg-cyan-500",
-  "bg-pink-500",
-  "bg-indigo-500",
+  "bg-blue-400",
+  "bg-violet-400",
+  "bg-emerald-400",
+  "bg-rose-400",
+  "bg-amber-400",
+  "bg-cyan-400",
+  "bg-pink-400",
+  "bg-indigo-400",
 ];
 
 function getAvatarColor(name: string): string {
@@ -78,7 +78,7 @@ export function AvatarWithPlatformBadge({
 
       {/* Platform badge */}
       <div
-        className={`absolute -bottom-0.5 -right-0.5 ${s.badge} rounded-full bg-white ring-1 ring-white shadow-sm flex items-center justify-center`}
+        className={`absolute -bottom-0.5 -right-0.5 ${s.badge} rounded-full bg-white ring-2 ring-white flex items-center justify-center`}
       >
         <PlatformIcon platform={platform} className={s.icon} />
       </div>

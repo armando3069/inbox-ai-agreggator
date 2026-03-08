@@ -2,11 +2,12 @@
 
 import { type FormEvent, useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, CheckCircle2, LayoutTemplate, ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, Cable, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getToken } from "@/services/auth/auth-service";
 import { platformsService } from "@/services/platforms/platforms.service";
 import type { PlatformAccount } from "@/services/platforms/platforms.types";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 // ── Platform config ─────────────────────────────────────────────────────────
 
@@ -158,94 +159,85 @@ function ConnectPlatformsContent() {
 
   if (isAuthLoading || isCheckingPlatforms) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-page)]">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-[var(--radius-button)] bg-emerald-600 px-4 py-3 text-[13px] font-medium text-white shadow-[var(--shadow-dropdown)]">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           {toast}
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 relative">
-        {isManaging && (
-          <button
-            onClick={() => router.back()}
-            className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Înapoi
-          </button>
-        )}
-
-        <div className="mb-12 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg">
-            <LayoutTemplate className="h-7 w-7 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800">
-            {isManaging ? "Gestionează platformele" : "Conectează-ți prima platformă"}
-          </h1>
-          <p className="mt-3 text-base text-slate-500 max-w-md mx-auto">
-            {isManaging
-              ? "Adaugă sau gestionează canalele de comunicare conectate."
-              : "Alege canalul de comunicare pe care vrei să-l gestionezi."}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          {/* ── Platform cards ── */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex-1">
-            {PLATFORMS.map((platform) => (
-              <PlatformCard
-                key={platform.id}
-                platform={platform}
-                isSelected={selectedId === platform.id}
-                isConnected={connectedIds.has(platform.id)}
-                onClick={() => handleCardClick(platform)}
-              />
-            ))}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <PageHeader
+              icon={Cable}
+              title={isManaging ? "Gestionează platformele" : "Conectează-ți prima platformă"}
+              description={
+                isManaging
+                  ? "Adaugă sau gestionează canalele de comunicare conectate."
+                  : "Alege canalul de comunicare pe care vrei să-l gestionezi."
+              }
+            />
           </div>
 
-          {/* ── Connect form ── */}
-          <div className="w-full lg:w-96 lg:shrink-0">
-            {selectedId === "telegram" && (
-              <TelegramForm
-                botToken={tgBotToken}
-                onBotTokenChange={setTgBotToken}
-                isConnecting={isConnecting}
-                error={connectError}
-                onSubmit={handleTelegramSubmit}
-              />
-            )}
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            {/* ── Platform cards ── */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex-1">
+              {PLATFORMS.map((platform) => (
+                <PlatformCard
+                  key={platform.id}
+                  platform={platform}
+                  isSelected={selectedId === platform.id}
+                  isConnected={connectedIds.has(platform.id)}
+                  onClick={() => handleCardClick(platform)}
+                />
+              ))}
+            </div>
 
-            {selectedId === "whatsapp" && (
-              <WhatsappForm
-                accessToken={waAccessToken}
-                phoneNumberId={waPhoneNumberId}
-                onAccessTokenChange={setWaAccessToken}
-                onPhoneNumberIdChange={setWaPhoneNumberId}
-                isConnecting={isConnecting}
-                error={connectError}
-                onSubmit={handleWhatsappSubmit}
-              />
-            )}
+            {/* ── Connect form ── */}
+            <div className="w-full lg:w-96 lg:shrink-0">
+              {selectedId === "telegram" && (
+                <TelegramForm
+                  botToken={tgBotToken}
+                  onBotTokenChange={setTgBotToken}
+                  isConnecting={isConnecting}
+                  error={connectError}
+                  onSubmit={handleTelegramSubmit}
+                />
+              )}
 
-            {!selectedId && (
-              <div className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                  <LayoutTemplate className="h-5 w-5 text-slate-400" />
+              {selectedId === "whatsapp" && (
+                <WhatsappForm
+                  accessToken={waAccessToken}
+                  phoneNumberId={waPhoneNumberId}
+                  onAccessTokenChange={setWaAccessToken}
+                  onPhoneNumberIdChange={setWaPhoneNumberId}
+                  isConnecting={isConnecting}
+                  error={connectError}
+                  onSubmit={handleWhatsappSubmit}
+                />
+              )}
+
+              {!selectedId && (
+                <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-[var(--border-default)] bg-white/60 p-8 text-center">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[var(--radius-button)] bg-[var(--bg-surface-hover)]">
+                    <Cable className="h-5 w-5 text-[var(--text-tertiary)]" />
+                  </div>
+                  <p className="text-[13px] text-[var(--text-tertiary)]">
+                    Selectează o platformă neconectată pentru a o adăuga.
+                  </p>
                 </div>
-                <p className="text-sm text-slate-400">
-                  Selectează o platformă neconectată pentru a o adăuga.
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -259,8 +251,8 @@ export default function ConnectPlatformsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" />
         </div>
       }
     >
@@ -290,35 +282,35 @@ function PlatformCard({
       onClick={onClick}
       disabled={!clickable}
       className={[
-        "relative w-full rounded-2xl border p-5 text-left transition-all duration-150",
-        clickable ? "cursor-pointer hover:border-slate-300 hover:shadow-sm" : "cursor-not-allowed",
-        isConnected ? "opacity-70 border-slate-200 bg-white" : "",
-        platform.status === "coming-soon" && !isConnected ? "opacity-60 border-slate-200 bg-white" : "",
+        "relative w-full rounded-[var(--radius-card)] border p-5 text-left transition-all duration-150",
+        clickable ? "cursor-pointer hover:border-[var(--border-default)] hover:shadow-[var(--shadow-sm)]" : "cursor-not-allowed",
+        isConnected ? "opacity-70 border-[var(--border-default)] bg-white" : "",
+        platform.status === "coming-soon" && !isConnected ? "opacity-60 border-[var(--border-default)] bg-white" : "",
         !isConnected && platform.status === "available" && !isSelected
-          ? "border-slate-200 bg-white"
+          ? "border-[var(--border-default)] bg-white"
           : "",
-        isSelected ? "border-sky-500 ring-1 ring-sky-500 bg-white shadow-md" : "",
+        isSelected ? "border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)] bg-white shadow-[var(--shadow-card)]" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
       {isConnected ? (
-        <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+        <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
           <CheckCircle2 className="h-3 w-3" />
           Conectat
         </span>
       ) : platform.status === "coming-soon" ? (
-        <span className="absolute right-3 top-3 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+        <span className="absolute right-3 top-3 rounded-full bg-[var(--bg-surface-hover)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-tertiary)]">
           În curând
         </span>
       ) : null}
 
-      <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl ${platform.bgColor}`}>
+      <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-button)] ${platform.bgColor}`}>
         <span className={platform.accentColor}>{platform.icon}</span>
       </div>
 
-      <p className="font-semibold text-slate-800">{platform.label}</p>
-      <p className="mt-1 text-sm text-slate-500">{platform.description}</p>
+      <p className="font-medium text-[var(--text-primary)]">{platform.label}</p>
+      <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">{platform.description}</p>
     </button>
   );
 }
@@ -335,20 +327,20 @@ function TelegramForm({
   onSubmit: (e: FormEvent) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-white p-6 shadow-[var(--shadow-card)]">
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
+        <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-button)] bg-sky-50">
           <span className="text-sky-500"><TelegramIcon /></span>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-slate-800">Conectează Telegram</h2>
-          <p className="text-xs text-slate-500">Introdu token-ul botului tău</p>
+          <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Conectează Telegram</h2>
+          <p className="text-[12px] text-[var(--text-tertiary)]">Introdu token-ul botului tău</p>
         </div>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="tg-bot-token" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="tg-bot-token" className="block text-[13px] font-medium text-[var(--text-secondary)]">
             Bot Token
           </label>
           <input
@@ -359,17 +351,17 @@ function TelegramForm({
             placeholder="1234567890:ABCDefgh..."
             required
             autoFocus
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-[var(--radius-input)] border border-[var(--border-default)] px-3 py-2.5 text-[13px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/10 focus:border-[var(--accent-primary)]/30"
           />
-          <p className="text-xs text-slate-400">
+          <p className="text-[12px] text-[var(--text-tertiary)]">
             Obține token-ul de la{" "}
-            <span className="font-medium text-slate-500">@BotFather</span> cu comanda{" "}
-            <code className="rounded bg-slate-100 px-1 py-0.5">/newbot</code>.
+            <span className="font-medium text-[var(--text-secondary)]">@BotFather</span> cu comanda{" "}
+            <code className="rounded bg-[var(--bg-surface-hover)] px-1 py-0.5">&#47;newbot</code>.
           </p>
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+          <div className="flex items-start gap-2 rounded-[var(--radius-badge)] border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] text-red-700">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             {error}
           </div>
@@ -378,7 +370,7 @@ function TelegramForm({
         <button
           type="submit"
           disabled={isConnecting || !botToken.trim()}
-          className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+          className="w-full rounded-[var(--radius-button)] bg-[var(--accent-primary)] py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#222] disabled:opacity-60"
         >
           {isConnecting ? "Se conectează…" : "Conectează Telegram"}
         </button>
@@ -404,13 +396,13 @@ function CopyField({ label, value }: { label: string; value: string }) {
   };
   return (
     <div className="space-y-1">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-        <code className="flex-1 truncate text-xs text-slate-700">{value}</code>
+      <p className="text-[12px] font-medium text-[var(--text-tertiary)]">{label}</p>
+      <div className="flex items-center gap-2 rounded-[var(--radius-badge)] border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-3 py-2">
+        <code className="flex-1 truncate text-[12px] text-[var(--text-secondary)]">{value}</code>
         <button
           type="button"
           onClick={copy}
-          className="shrink-0 text-xs font-medium text-green-600 hover:text-green-700"
+          className="shrink-0 text-[12px] font-medium text-emerald-600 hover:text-emerald-700"
         >
           {copied ? "Copiat!" : "Copiază"}
         </button>
@@ -437,22 +429,22 @@ function WhatsappForm({
   onSubmit: (e: FormEvent) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+    <div className="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-white p-6 shadow-[var(--shadow-card)] space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
+        <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-button)] bg-green-50">
           <span className="text-green-500"><WhatsAppIcon /></span>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-slate-800">Conectează WhatsApp</h2>
-          <p className="text-xs text-slate-500">WhatsApp Business Cloud API</p>
+          <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Conectează WhatsApp</h2>
+          <p className="text-[12px] text-[var(--text-tertiary)]">WhatsApp Business Cloud API</p>
         </div>
       </div>
 
       {/* Credentials form */}
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="wa-token" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="wa-token" className="block text-[13px] font-medium text-[var(--text-secondary)]">
             Access Token
           </label>
           <input
@@ -463,15 +455,12 @@ function WhatsappForm({
             placeholder="EAAUlx…"
             required
             autoFocus
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="w-full rounded-[var(--radius-input)] border border-[var(--border-default)] px-3 py-2.5 text-[13px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/10 focus:border-[var(--accent-primary)]/30"
           />
-          <p className="text-xs text-slate-400">
-            Meta Developer Portal → WhatsApp → API Setup → Temporary or permanent token.
-          </p>
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="wa-phone-id" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="wa-phone-id" className="block text-[13px] font-medium text-[var(--text-secondary)]">
             Phone Number ID
           </label>
           <input
@@ -481,15 +470,12 @@ function WhatsappForm({
             onChange={(e) => onPhoneNumberIdChange(e.target.value)}
             placeholder="102391771747…"
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="w-full rounded-[var(--radius-input)] border border-[var(--border-default)] px-3 py-2.5 text-[13px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/10 focus:border-[var(--accent-primary)]/30"
           />
-          <p className="text-xs text-slate-400">
-            Meta Developer Portal → WhatsApp → API Setup → Phone Number ID.
-          </p>
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+          <div className="flex items-start gap-2 rounded-[var(--radius-badge)] border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] text-red-700">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             {error}
           </div>
@@ -498,24 +484,24 @@ function WhatsappForm({
         <button
           type="submit"
           disabled={isConnecting || !accessToken.trim() || !phoneNumberId.trim()}
-          className="w-full rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-60"
+          className="w-full rounded-[var(--radius-button)] bg-[var(--accent-primary)] py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#222] disabled:opacity-60"
         >
           {isConnecting ? "Se conectează…" : "Conectează WhatsApp"}
         </button>
       </form>
 
       {/* Webhook instructions */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <div className="rounded-[var(--radius-button)] border border-[var(--border-default)] bg-[var(--bg-surface-hover)] p-4 space-y-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
           Configurare Webhook în Meta
         </p>
         <CopyField label="Callback URL" value={WHATSAPP_WEBHOOK_URL} />
         <CopyField label="Verify Token" value={WHATSAPP_VERIFY_TOKEN} />
-        <p className="text-xs text-slate-400">
+        <p className="text-[12px] text-[var(--text-tertiary)]">
           Meta Developer Portal → WhatsApp → Configuration → Webhook →{" "}
-          <span className="font-medium text-slate-500">Edit</span> → lipsează-ți datele de mai sus, apasă{" "}
-          <span className="font-medium text-slate-500">Verify and Save</span>, apoi abonează-te la{" "}
-          <code className="rounded bg-slate-200 px-1">messages</code>.
+          <span className="font-medium text-[var(--text-secondary)]">Edit</span> → lipește datele de mai sus, apasă{" "}
+          <span className="font-medium text-[var(--text-secondary)]">Verify and Save</span>, apoi abonează-te la{" "}
+          <code className="rounded bg-[var(--border-subtle)] px-1">messages</code>.
         </p>
       </div>
     </div>

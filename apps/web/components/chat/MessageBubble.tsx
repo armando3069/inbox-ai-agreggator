@@ -74,10 +74,10 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
 
         {/* Speech bubble */}
         <div
-          className={`p-4 rounded-2xl shadow-sm ${
+          className={`p-4 rounded-2xl ${
             isClient
-              ? "bg-white text-slate-800 rounded-tl-sm"
-              : "bg-blue-600 text-white rounded-tr-sm ml-auto"
+              ? "bg-white text-[var(--text-primary)] rounded-tl-sm shadow-[var(--shadow-sm)] border border-[var(--border-subtle)]"
+              : "bg-[#1F2937] text-white rounded-tr-sm ml-auto"
           }`}
         >
           <p className={isTranslating ? "opacity-50" : ""}>
@@ -88,7 +88,7 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
         {/* Translation footer */}
         {translation && !isTranslating && (
           <div
-            className={`mt-1 flex items-center gap-1 text-xs text-slate-400 ${
+            className={`mt-1.5 flex items-center gap-1 text-[11px] text-[var(--text-tertiary)] ${
               isClient ? "ml-1" : "mr-1 justify-end"
             }`}
           >
@@ -97,7 +97,7 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
             <span>·</span>
             <button
               onClick={() => setShowOriginal((p) => !p)}
-              className="text-blue-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
+              className="text-[var(--accent-blue)] hover:underline underline-offset-2 transition-colors"
             >
               {showOriginal ? "Afișează traducerea" : "Vezi originalul"}
             </button>
@@ -106,11 +106,11 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
 
         {/* Timestamp */}
         <div
-          className={`flex items-center gap-2 mt-1 text-xs text-slate-500 ${
+          className={`flex items-center gap-2 mt-1 text-[11px] text-[var(--text-tertiary)] ${
             isClient ? "ml-2" : "mr-2 justify-end"
           }`}
         >
-          {!isClient && <CheckCheck className="w-4 h-4 text-blue-500" />}
+          {!isClient && <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />}
           <span>{time}</span>
         </div>
       </div>

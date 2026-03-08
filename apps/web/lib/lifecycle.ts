@@ -14,11 +14,11 @@ export interface LifecycleStage {
 }
 
 export const LIFECYCLE_STAGES: LifecycleStage[] = [
-  { value: "NEW_LEAD",  label: "New Lead",  emoji: "🆕", group: "active", badgeClass: "bg-blue-100 text-blue-700 border-blue-200"    },
-  { value: "HOT_LEAD",  label: "Hot Lead",  emoji: "🔥", group: "active", badgeClass: "bg-red-100 text-red-700 border-red-200"      },
-  { value: "PAYMENT",   label: "Payment",   emoji: "💰", group: "active", badgeClass: "bg-green-100 text-green-700 border-green-200"  },
-  { value: "CUSTOMER",  label: "Customer",  emoji: "🤩", group: "active", badgeClass: "bg-purple-100 text-purple-700 border-purple-200"},
-  { value: "COLD_LEAD", label: "Cold Lead", emoji: "🧊", group: "lost",   badgeClass: "bg-slate-100 text-slate-500 border-slate-200"  },
+  { value: "NEW_LEAD",  label: "New Lead",  emoji: "🆕", group: "active", badgeClass: "bg-sky-50 text-sky-700 border-sky-100"        },
+  { value: "HOT_LEAD",  label: "Hot Lead",  emoji: "🔥", group: "active", badgeClass: "bg-orange-50 text-orange-700 border-orange-100" },
+  { value: "PAYMENT",   label: "Payment",   emoji: "💰", group: "active", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  { value: "CUSTOMER",  label: "Customer",  emoji: "🤩", group: "active", badgeClass: "bg-violet-50 text-violet-700 border-violet-100" },
+  { value: "COLD_LEAD", label: "Cold Lead", emoji: "🧊", group: "lost",   badgeClass: "bg-stone-50 text-stone-500 border-stone-200"   },
 ];
 
 

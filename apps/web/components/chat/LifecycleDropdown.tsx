@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { LIFECYCLE_STAGES, getLifecycleStage } from "@/lib/lifecycle";
 
 export function LifecycleDropdown({
@@ -13,10 +13,7 @@ export function LifecycleDropdown({
   onSelect: (value: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const stage = getLifecycleStage(current);
-
-  useClickOutside(ref, () => setIsOpen(false), isOpen);
 
   const activeStages = LIFECYCLE_STAGES.filter((s) => s.group === "active");
   const lostStages   = LIFECYCLE_STAGES.filter((s) => s.group === "lost");
@@ -27,65 +24,70 @@ export function LifecycleDropdown({
   };
 
   return (
-    <div ref={ref} className="relative">
+    <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
       {/* Badge / trigger */}
-      <button
-        onClick={() => setIsOpen((p) => !p)}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[14px] font-medium transition-all ${stage.badgeClass} hover:opacity-80`}
-      >
-        <span>{stage.emoji}</span>
-        <span>{stage.label}</span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </button>
+      <DropdownMenu.Trigger asChild>
+        <button
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-badge)] border text-[13px] font-medium transition-colors ${stage.badgeClass} hover:opacity-80`}
+        >
+          <span>{stage.emoji}</span>
+          <span>{stage.label}</span>
+          <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+      </DropdownMenu.Trigger>
 
       {/* Dropdown panel */}
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden py-1">
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="start"
+          sideOffset={6}
+          className="w-48 bg-white border border-[var(--border-default)] rounded-[var(--radius-button)] shadow-[var(--shadow-dropdown)] z-50 overflow-hidden py-1 animate-in fade-in-0 zoom-in-95"
+        >
           <div className="px-3 pt-2 pb-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
               Lifecycle Stages
             </p>
           </div>
           {activeStages.map((s) => (
-            <button
+            <DropdownMenu.Item
               key={s.value}
-              onClick={() => handleSelect(s.value)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+              onSelect={() => handleSelect(s.value)}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-[13px] transition-colors cursor-pointer outline-none ${
                 s.value === current
-                  ? "bg-slate-50 font-medium text-slate-800"
-                  : "text-slate-700 hover:bg-slate-50"
+                  ? "bg-[var(--bg-surface-hover)] font-medium text-[var(--text-primary)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]"
               }`}
             >
               <span>{s.emoji}</span>
               <span className="flex-1 text-left">{s.label}</span>
-              {s.value === current && <Check className="w-3 h-3 text-slate-400" />}
-            </button>
+              {s.value === current && <Check className="w-3 h-3 text-[var(--text-tertiary)]" />}
+            </DropdownMenu.Item>
           ))}
 
-          <div className="border-t border-slate-100 my-1" />
+          <DropdownMenu.Separator className="h-px bg-[var(--border-subtle)] my-1" />
           <div className="px-3 pb-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
               Lost Stages
             </p>
           </div>
           {lostStages.map((s) => (
-            <button
+            <DropdownMenu.Item
               key={s.value}
-              onClick={() => handleSelect(s.value)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+              onSelect={() => handleSelect(s.value)}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-[13px] transition-colors cursor-pointer outline-none ${
                 s.value === current
-                  ? "bg-slate-50 font-medium text-slate-800"
-                  : "text-slate-700 hover:bg-slate-50"
+                  ? "bg-[var(--bg-surface-hover)] font-medium text-[var(--text-primary)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]"
               }`}
             >
               <span>{s.emoji}</span>
               <span className="flex-1 text-left">{s.label}</span>
-              {s.value === current && <Check className="w-3 h-3 text-slate-400" />}
-            </button>
+              {s.value === current && <Check className="w-3 h-3 text-[var(--text-tertiary)]" />}
+            </DropdownMenu.Item>
           ))}
           <div className="h-1" />
-        </div>
-      )}
-    </div>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }
