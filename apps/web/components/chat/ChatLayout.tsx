@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useConversations } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
-import { buildChannels } from "@/lib/chatUtils";
+import { buildChannels, formatMessageTime } from "@/lib/chatUtils";
 import { messagesService } from "@/services/messages/messages.service";
 import { conversationsService } from "@/services/conversations/conversations.service";
 import { aiAssistantQueryKeys } from "@/services/ai-assistant/ai-assistant.service";
@@ -21,6 +21,7 @@ const SUGGESTIONS_GC_MS   = 30 * 60 * 1000; // 30 minutes
 
 export function ChatLayout() {
   const [selectedChannel, setSelectedChannel] = useState("all");
+  const [conversationFilter, setConversationFilter] = useState<"all" | "unread">("all");
   const [selectedConversation, setSelectedConversation] = useState<ConversationViewModel | null>(null);
   const [messageInput, setMessageInput] = useState("");
 
@@ -115,6 +116,7 @@ export function ChatLayout() {
   useEffect(() => {
     const unsub = subscribeToNewMessage((msg: Message) => {
       if (msg.sender_type !== "client" || !msg.text) return;
+      // Skip the currently open conversation — useMessages handles its preview
       if (selectedConvRef.current?.id === msg.conversation_id) return;
 
       const conv = conversationsRef.current.find((c) => c.id === msg.conversation_id);
@@ -125,17 +127,31 @@ export function ChatLayout() {
           textPreview: msg.text,
         });
       }
+
+      // Update preview + increment unread badge in local state
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== msg.conversation_id) return c;
+          return {
+            ...c,
+            lastMessage: msg.text ?? c.lastMessage,
+            time: formatMessageTime(msg.timestamp ?? msg.created_at),
+            unread: c.unread + 1,
+          };
+        })
+      );
     });
     return () => { unsub(); };
-  }, []);
+  }, [setConversations]);
 
   // ── Channels & filtering ─────────────────────────────────────────────────
 
   const channels = buildChannels(conversations);
 
   const filteredConversations = conversations.filter((conv) => {
-    if (selectedChannel === "all") return true;
-    return conv.platform === selectedChannel;
+    if (selectedChannel !== "all" && conv.platform !== selectedChannel) return false;
+    if (conversationFilter === "unread" && conv.unread === 0) return false;
+    return true;
   });
 
   // ── Contact info / lifecycle update ──────────────────────────────────────
@@ -159,6 +175,28 @@ export function ChatLayout() {
     },
     [setConversations],
   );
+
+  // ── Mark selected conversation as read ───────────────────────────────────
+  //
+  // Runs whenever the selected conversation changes. Uses conversationsRef so
+  // the effect only re-runs on ID change — no stale-closure issues with the
+  // conversations array.
+
+  useEffect(() => {
+    if (!selectedConversation) return;
+    const conv = conversationsRef.current.find((c) => c.id === selectedConversation.id);
+    if (!conv || conv.unread === 0) return;
+
+    // Optimistic: clear badge immediately
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c))
+    );
+    // Persist to backend (fire-and-forget)
+    conversationsService.markAsRead(conv.id).catch((e) =>
+      console.error("markAsRead error", e)
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConversation?.id]);
 
   // ── Send ─────────────────────────────────────────────────────────────────
 
@@ -188,7 +226,9 @@ export function ChatLayout() {
         conversations={filteredConversations}
         selectedConversation={selectedConversation}
         isLoading={isLoadingConversations}
+        conversationFilter={conversationFilter}
         onSelectConversation={setSelectedConversation}
+        onFilterChange={setConversationFilter}
       />
       <ChatArea
         conversation={selectedConversation}

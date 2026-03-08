@@ -15,7 +15,11 @@ export function ConversationItem({ conversation: conv, isSelected, onSelect }: C
     <div
       onClick={() => onSelect(conv)}
       className={`p-4 border-b border-slate-100 cursor-pointer transition-all hover:bg-slate-50 ${
-        isSelected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+        isSelected
+          ? "bg-blue-50 border-l-4 border-l-blue-500"
+          : conv.unread > 0
+            ? "bg-blue-50/30 border-l-4 border-l-blue-400"
+            : ""
       }`}
     >
       <div className="flex gap-3">
@@ -28,11 +32,17 @@ export function ConversationItem({ conversation: conv, isSelected, onSelect }: C
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-1">
-            <h3 className="font-semibold text-slate-800 text-sm truncate">{conv.contact}</h3>
-            <span className="text-xs text-slate-500 ml-2">{conv.time}</span>
+            <h3 className={`text-sm truncate ${conv.unread > 0 ? "font-bold text-slate-900" : "font-semibold text-slate-800"}`}>
+              {conv.contact}
+            </h3>
+            <span className={`text-xs ml-2 ${conv.unread > 0 ? "font-semibold text-slate-700" : "text-slate-500"}`}>
+              {conv.time}
+            </span>
           </div>
 
-          <p className="text-sm text-slate-600 line-clamp-2 mb-2">{conv.lastMessage}</p>
+          <p className={`text-sm line-clamp-2 mb-2 ${conv.unread > 0 ? "text-slate-800 font-medium" : "text-slate-600"}`}>
+            {conv.lastMessage}
+          </p>
 
           <div className="flex items-center gap-2 flex-wrap">
             <span

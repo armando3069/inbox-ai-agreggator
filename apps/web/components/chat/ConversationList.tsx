@@ -6,15 +6,21 @@ interface ConversationListProps {
   conversations: ConversationViewModel[];
   selectedConversation: ConversationViewModel | null;
   isLoading: boolean;
+  conversationFilter: "all" | "unread";
   onSelectConversation: (conv: ConversationViewModel) => void;
+  onFilterChange: (filter: "all" | "unread") => void;
 }
 
 export function ConversationList({
   conversations,
   selectedConversation,
   isLoading,
+  conversationFilter,
   onSelectConversation,
+  onFilterChange,
 }: ConversationListProps) {
+  const unreadCount = conversations.filter((c) => c.unread > 0).length;
+
   return (
     <div className="w-96 bg-white border-r border-slate-200 flex flex-col">
       <div className="p-4 border-b border-slate-200">
@@ -26,14 +32,30 @@ export function ConversationList({
         </div>
 
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
+          <button
+            onClick={() => onFilterChange("all")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              conversationFilter === "all"
+                ? "bg-blue-100 text-blue-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
             Toate
           </button>
-          <button className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200">
-            Urgent
-          </button>
-          <button className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200">
+          <button
+            onClick={() => onFilterChange("unread")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${
+              conversationFilter === "unread"
+                ? "bg-blue-100 text-blue-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
             Necitite
+            {unreadCount > 0 && (
+              <span className="bg-blue-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                {unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
