@@ -49,17 +49,17 @@ export function MessageActions({ text, isTranslating, onTranslate }: MessageActi
   return (
     // Absolute bar: sits just above the message bubble (bottom-full + mb-1).
     // It stays visible as long as the parent `group` is hovered.
-    <div className="absolute right-0 bottom-full mb-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+    <div className="absolute right-0 bottom-full mb-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-120 ease-out">
       {/* Action chips */}
-      <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-lg shadow-md p-1">
+      <div className="flex items-center gap-0.5 bg-white border border-[var(--border-default)] rounded-lg shadow-[var(--shadow-sm)] p-0.5">
         {/* Copy */}
         <button
           onClick={handleCopy}
           title="Copiază"
-          className="p-1.5 rounded-md hover:bg-slate-100 transition-colors text-slate-500 hover:text-slate-700"
+          className="p-1.5 rounded-md hover:bg-[var(--bg-surface-hover)] transition-all duration-120 ease-out text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
         >
           {isCopied
-            ? <Check className="w-3.5 h-3.5 text-green-500" />
+            ? <Check className="w-3.5 h-3.5 text-emerald-500" />
             : <Copy className="w-3.5 h-3.5" />}
         </button>
 
@@ -68,10 +68,10 @@ export function MessageActions({ text, isTranslating, onTranslate }: MessageActi
           ref={translateBtnRef}
           onClick={() => setIsTranslateOpen((p) => !p)}
           title="Traduce"
-          className={`p-1.5 rounded-md transition-colors ${
+          className={`p-1.5 rounded-md transition-all duration-120 ease-out ${
             isTranslateOpen || isTranslating
-              ? "bg-blue-50 text-blue-600"
-              : "hover:bg-slate-100 text-slate-500 hover:text-slate-700"
+              ? "bg-[var(--bg-surface-hover)] text-[var(--text-primary)]"
+              : "hover:bg-[var(--bg-surface-hover)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
           }`}
         >
           {isTranslating

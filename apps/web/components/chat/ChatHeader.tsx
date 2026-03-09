@@ -25,7 +25,7 @@ export function ChatHeader({ conversation, onUpdateConversation }: ChatHeaderPro
 
   return (
     <>
-      <div className="p-4 border-b border-slate-200 bg-white">
+      <div className="px-5 py-3 border-b border-[var(--border-default)] bg-white">
         <div className="flex items-center justify-between gap-3">
           {/* Left — avatar + name + platform */}
           <div className="flex items-center gap-3 min-w-0">
@@ -35,9 +35,9 @@ export function ChatHeader({ conversation, onUpdateConversation }: ChatHeaderPro
               platform={conversation.platform}
               size="md"
             />
-            <div className="w-full">
-              <h3 className="font-semibold text-slate-800 truncate">{conversation.contact}</h3>
-              <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-[14px] text-[var(--text-primary)] truncate leading-tight">{conversation.contact}</h3>
+              <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] mt-0.5">
                 <LifecycleDropdown
                     current={conversation.lifecycleStatus ?? "NEW_LEAD"}
                     onSelect={handleLifecycleChange}
@@ -46,21 +46,21 @@ export function ChatHeader({ conversation, onUpdateConversation }: ChatHeaderPro
             </div>
           </div>
 
-          {/* Right — lifecycle badge + edit contact + star + archive */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Right — edit contact + star + archive */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               onClick={() => setIsEditOpen(true)}
               title="Edit Contact Info"
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-all duration-120 ease-out"
             >
-              <Pencil className="w-4 h-4 text-slate-500" />
+              <Pencil className="w-4 h-4" />
             </button>
 
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <Star className="w-5 h-5 text-slate-600" />
+            <button className="p-2 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-all duration-120 ease-out">
+              <Star className="w-4 h-4" />
             </button>
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <Archive className="w-5 h-5 text-slate-600" />
+            <button className="p-2 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-all duration-120 ease-out">
+              <Archive className="w-4 h-4" />
             </button>
           </div>
         </div>

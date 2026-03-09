@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Message } from "@/lib/types";
 import { MessageBubble } from "./MessageBubble";
 
@@ -7,20 +8,59 @@ interface MessagesListProps {
   avatar: string;
 }
 
+/** Two messages belong to the same visual group if they share sender_type
+ *  and are within 2 minutes of each other. */
+function withinGroupWindow(a: Message, b: Message): boolean {
+  const ta = new Date(a.timestamp ?? a.created_at ?? 0).getTime();
+  const tb = new Date(b.timestamp ?? b.created_at ?? 0).getTime();
+  return Math.abs(tb - ta) < 2 * 60 * 1000; // 2 minutes
+}
+
 export function MessagesList({ messages, isLoading, avatar }: MessagesListProps) {
+  /** For each message, compute whether it's the first / last in a
+   *  consecutive same-sender group. This lets MessageBubble skip
+   *  repeated avatars and collapse spacing. */
+  const groupInfo = useMemo(() => {
+    return messages.map((msg, i) => {
+      const prev = i > 0 ? messages[i - 1] : null;
+      const next = i < messages.length - 1 ? messages[i + 1] : null;
+
+      const sameSenderAsPrev =
+        prev !== null &&
+        prev.sender_type === msg.sender_type &&
+        withinGroupWindow(prev, msg);
+
+      const sameSenderAsNext =
+        next !== null &&
+        next.sender_type === msg.sender_type &&
+        withinGroupWindow(msg, next);
+
+      return {
+        isFirstInGroup: !sameSenderAsPrev,
+        isLastInGroup: !sameSenderAsNext,
+      };
+    });
+  }, [messages]);
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
-      <div className="max-w-4xl mx-auto space-y-4">
+    <div className="flex-1 overflow-y-auto px-6 py-6 bg-[var(--bg-page)]">
+      <div className="max-w-3xl mx-auto">
         {isLoading && (
-          <div className="text-xs text-slate-500 text-center">Se încarcă mesajele...</div>
+          <div className="text-[12px] text-[var(--text-tertiary)] text-center py-8">Se încarcă mesajele...</div>
         )}
 
         {!isLoading && messages.length === 0 && (
-          <div className="text-xs text-slate-500 text-center">Nu există mesaje încă.</div>
+          <div className="text-[12px] text-[var(--text-tertiary)] text-center py-8">Nu există mesaje încă.</div>
         )}
 
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} avatar={avatar} />
+        {messages.map((msg, i) => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            avatar={avatar}
+            isFirstInGroup={groupInfo[i].isFirstInGroup}
+            isLastInGroup={groupInfo[i].isLastInGroup}
+          />
         ))}
       </div>
     </div>

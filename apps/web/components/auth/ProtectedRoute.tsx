@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getToken } from "@/services/auth/auth-service";
 import { getPlatformAccounts } from "@/services/platforms/platform-service";
@@ -9,7 +9,11 @@ import { getPlatformAccounts } from "@/services/platforms/platform-service";
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isCheckingPlatforms, setIsCheckingPlatforms] = useState(true);
+
+  // Skip platform check if already on connect-platforms page
+  const isOnConnectPlatforms = pathname === "/connect-platforms";
 
   // Step 1: if not authenticated → /auth/login
   useEffect(() => {
@@ -21,6 +25,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // Step 2: if authenticated → check platforms → /connect-platforms if none
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
+
+    // Don't redirect away from connect-platforms (avoids loop)
+    if (isOnConnectPlatforms) {
+      setIsCheckingPlatforms(false);
+      return;
+    }
 
     const token = getToken();
     if (!token) return;
@@ -34,15 +44,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(() => {
-        // If the check fails, show the dashboard anyway
         setIsCheckingPlatforms(false);
       });
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, isOnConnectPlatforms, router]);
 
   if (isLoading || (isAuthenticated && isCheckingPlatforms)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" />
       </div>
     );
   }

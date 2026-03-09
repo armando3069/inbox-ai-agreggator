@@ -1,5 +1,5 @@
-import { Filter } from "lucide-react";
-import type { ConversationViewModel } from "@/lib/types";
+import type { ConversationViewModel, Channel } from "@/lib/types";
+import { PlatformIcon } from "./PlatformIcon";
 import { ConversationItem } from "./ConversationItem";
 
 interface ConversationListProps {
@@ -7,6 +7,9 @@ interface ConversationListProps {
   selectedConversation: ConversationViewModel | null;
   isLoading: boolean;
   conversationFilter: "all" | "unread";
+  channels: Channel[];
+  selectedChannel: string;
+  onSelectChannel: (id: string) => void;
   onSelectConversation: (conv: ConversationViewModel) => void;
   onFilterChange: (filter: "all" | "unread") => void;
 }
@@ -16,57 +19,63 @@ export function ConversationList({
   selectedConversation,
   isLoading,
   conversationFilter,
+  channels,
+  selectedChannel,
+  onSelectChannel,
   onSelectConversation,
   onFilterChange,
 }: ConversationListProps) {
   const unreadCount = conversations.filter((c) => c.unread > 0).length;
 
   return (
-    <div className="w-96 bg-white border-r border-slate-200 flex flex-col">
-      <div className="p-4 border-b border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-800">Conversații</h2>
-          <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <Filter className="w-5 h-5 text-slate-600" />
-          </button>
-        </div>
+    <div className="w-80 border-r border-[var(--border-default)] flex flex-col bg-white flex-shrink-0 rounded-l-xl">
+      <div className="px-4 pt-4 pb-3">
+        <h2 className="text-[15px] font-semibold text-[var(--text-primary)] tracking-tight mb-3">Conversații</h2>
 
-        <div className="flex gap-2">
+        {/* Read/Unread filter */}
+        <div className="flex gap-1.5 mb-3">
           <button
             onClick={() => onFilterChange("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-120 ease-out ${
               conversationFilter === "all"
-                ? "bg-blue-100 text-blue-700"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-[var(--accent-primary)] text-white shadow-[var(--shadow-xs)]"
+                : "bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--border-default)] hover:text-[var(--text-primary)]"
             }`}
           >
             Toate
           </button>
           <button
             onClick={() => onFilterChange("unread")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-120 ease-out flex items-center gap-1.5 ${
               conversationFilter === "unread"
-                ? "bg-blue-100 text-blue-700"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-[var(--accent-primary)] text-white shadow-[var(--shadow-xs)]"
+                : "bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--border-default)] hover:text-[var(--text-primary)]"
             }`}
           >
             Necitite
             {unreadCount > 0 && (
-              <span className="bg-blue-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+              <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none ${
+                conversationFilter === "unread"
+                  ? "bg-white/20 text-white"
+                  : "bg-[var(--accent-primary)] text-white"
+              }`}>
                 {unreadCount}
               </span>
             )}
           </button>
         </div>
+
+        {/* Platform channel filter pills */}
+
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {isLoading && (
-          <div className="p-4 text-xs text-slate-500">Se încarcă...</div>
+          <div className="px-4 py-8 text-[12px] text-[var(--text-tertiary)] text-center">Se încarcă...</div>
         )}
 
         {!isLoading && conversations.length === 0 && (
-          <div className="p-4 text-xs text-slate-500">Nu există conversații încă.</div>
+          <div className="px-4 py-8 text-[12px] text-[var(--text-tertiary)] text-center">Nu există conversații încă.</div>
         )}
 
         {conversations.map((conv) => (

@@ -86,7 +86,7 @@ export function MessageInput({
   };
 
   return (
-    <div ref={wrapperRef} className="p-4 border-t border-slate-200 bg-white">
+    <div ref={wrapperRef} className="px-5 py-4 border-t border-[var(--border-default)] bg-white">
       {/* Suggestions panel — smooth collapse/expand */}
       <div
         className={`overflow-hidden transition-all duration-200 ease-in-out ${
@@ -103,9 +103,9 @@ export function MessageInput({
         />
       </div>
 
-      <div className="flex items-end gap-3">
-        <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-          <Paperclip className="w-5 h-5 text-slate-600" />
+      <div className="flex items-end gap-2">
+        <button className="p-2 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-all duration-120 ease-out flex-shrink-0">
+          <Paperclip className="w-[18px] h-[18px]" />
         </button>
 
         {/* Textarea + emoji button share a relative container */}
@@ -114,26 +114,32 @@ export function MessageInput({
             ref={textareaRef}
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onSend();
+              }
+            }}
             placeholder="Scrie un mesaj..."
-            className="w-full p-3 pr-10 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full min-h-[44px] p-3 pr-10 border border-[var(--border-default)] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/8 focus:border-[var(--text-tertiary)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] text-[14px] leading-relaxed transition-all duration-120 ease-out"
             rows={2}
           />
 
           {/* Emoji toggle button */}
           <button
-            className={`absolute right-3 bottom-3 p-1 rounded-lg transition-colors ${
-              isEmojiOpen ? "bg-blue-100 text-blue-600" : "hover:bg-slate-100 text-slate-600"
+            className={`absolute right-3 bottom-3 p-1 rounded-lg transition-all duration-120 ease-out ${
+              isEmojiOpen ? "bg-[var(--bg-surface-hover)] text-[var(--text-primary)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]"
             }`}
             onClick={() => setIsEmojiOpen((prev) => !prev)}
           >
-            <Smile className="w-5 h-5" />
+            <Smile className="w-[18px] h-[18px]" />
           </button>
 
           {/* Emoji picker popover — appears above the composer, right-aligned */}
           {isEmojiOpen && (
             <div
               ref={emojiPickerRef}
-              className="absolute bottom-full right-0 mb-2 z-50 shadow-xl rounded-xl overflow-hidden"
+              className="absolute bottom-full right-0 mb-2 z-50 shadow-[var(--shadow-dropdown)] rounded-xl overflow-hidden"
             >
               <Picker
                 data={async () => {
@@ -150,30 +156,30 @@ export function MessageInput({
         </div>
 
         <button
-          className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors shadow-lg shadow-blue-200"
+          className="p-2.5 bg-[var(--accent-primary)] hover:bg-[#1F2937] text-white rounded-xl transition-all duration-120 ease-out active:scale-[0.96] shadow-[var(--shadow-xs)] flex-shrink-0"
           onClick={onSend}
         >
-          <Send className="w-5 h-5" />
+          <Send className="w-[18px] h-[18px]" />
         </button>
       </div>
 
-      <div className="flex items-center justify-between mt-2 px-2">
-        <div className="flex items-center gap-4 text-xs text-slate-500">
+      <div className="flex items-center justify-between mt-2.5 px-0.5">
+        <div className="flex items-center gap-2 text-[11px] text-[var(--text-tertiary)]">
 
-          {/* "Sugestii AI" toggle button — active state shows blue chip */}
+          {/* "Sugestii AI" toggle button — active state shows dark chip */}
           <button
             onClick={onToggleSuggestions}
-            className={`flex items-center gap-1 transition-colors rounded-md px-1.5 py-0.5 ${
+            className={`flex items-center gap-1 transition-all duration-120 ease-out rounded-md px-2 py-1 ${
               isSuggestionsOpen
-                ? "text-blue-600 bg-blue-50 font-medium"
-                : "hover:text-blue-600"
+                ? "text-[var(--text-primary)] bg-[var(--bg-surface-hover)] font-medium"
+                : "hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]"
             }`}
           >
-            <Zap className={`w-3 h-3 ${isSuggestionsOpen ? "fill-blue-600" : ""}`} />
+            <Zap className={`w-3 h-3 ${isSuggestionsOpen ? "fill-[var(--text-primary)]" : ""}`} />
             Sugestii AI
           </button>
 
-          <button className="hover:text-blue-600 transition-colors flex items-center gap-1">
+          <button className="flex items-center gap-1 transition-all duration-120 ease-out rounded-md px-2 py-1 hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]">
             <Tag className="w-3 h-3" />
             Auto-clasificare
           </button>

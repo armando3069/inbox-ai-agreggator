@@ -64,7 +64,7 @@ export function TranslatePopover({ onSelect, onClose }: TranslatePopoverProps) {
     <button
       key={lang.code}
       onClick={() => handleSelect(lang)}
-      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors text-left"
+      className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] rounded-[var(--radius-badge)] transition-colors text-left"
     >
       <span className="text-base w-6 text-center">{lang.flag}</span>
       <span>{lang.name}</span>
@@ -74,18 +74,18 @@ export function TranslatePopover({ onSelect, onClose }: TranslatePopoverProps) {
   return (
     <div
       ref={containerRef}
-      className="w-56 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden"
+      className="w-56 bg-white border border-[var(--border-default)] rounded-[var(--radius-button)] shadow-[var(--shadow-dropdown)] overflow-hidden"
     >
       {/* Search */}
-      <div className="p-2 border-b border-slate-100">
-        <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-lg">
-          <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+      <div className="p-2 border-b border-[var(--border-subtle)]">
+        <div className="flex items-center gap-2 px-2 py-1.5 bg-[var(--bg-surface-hover)] rounded-[var(--radius-badge)]">
+          <Search className="w-3.5 h-3.5 text-[var(--text-tertiary)] flex-shrink-0" />
           <input
             ref={searchRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Caută limbă..."
-            className="flex-1 bg-transparent text-xs outline-none text-slate-700 placeholder-slate-400"
+            className="flex-1 bg-transparent text-[12px] outline-none text-[var(--text-primary)] placeholder-[var(--text-tertiary)]"
           />
         </div>
       </div>
@@ -96,19 +96,19 @@ export function TranslatePopover({ onSelect, onClose }: TranslatePopoverProps) {
           filtered.length > 0 ? (
             filtered.map((l) => <LangRow key={l.code} lang={l} />)
           ) : (
-            <p className="text-xs text-slate-400 text-center py-4">Nicio limbă găsită</p>
+            <p className="text-[12px] text-[var(--text-tertiary)] text-center py-4">Nicio limbă găsită</p>
           )
         ) : (
           <>
-            <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
               Recente
             </p>
             {recentList.map((l) => <LangRow key={l.code} lang={l} />)}
 
             {otherList.length > 0 && (
               <>
-                <div className="my-1 border-t border-slate-100" />
-                <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <div className="my-1 border-t border-[var(--border-subtle)]" />
+                <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
                   Toate limbile
                 </p>
                 {otherList.map((l) => <LangRow key={l.code} lang={l} />)}

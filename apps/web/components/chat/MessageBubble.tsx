@@ -16,9 +16,13 @@ interface Translation {
 interface MessageBubbleProps {
   message: Message;
   avatar: string;
+  /** First message in a consecutive same-sender group — show avatar */
+  isFirstInGroup: boolean;
+  /** Last message in a consecutive same-sender group — show timestamp */
+  isLastInGroup: boolean;
 }
 
-export function MessageBubble({ message, avatar }: MessageBubbleProps) {
+export function MessageBubble({ message, avatar, isFirstInGroup, isLastInGroup }: MessageBubbleProps) {
   const isClient = message.sender_type === "client";
   const time     = formatMessageTime(message.timestamp ?? message.created_at);
 
@@ -32,7 +36,6 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
 
   const handleTranslate = useCallback(async (langCode: string, langName: string) => {
     if (!message.text) return;
-    // If already translated to same language, just toggle back
     if (translation?.targetLanguage === langName) {
       setShowOriginal(false);
       return;
@@ -57,14 +60,24 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
     }
   }, [message.id, message.text, translation]);
 
+  // ── Spacing logic ────────────────────────────────────────────────────────
+  // Between groups:  mt-5 (20px breathing room)
+  // Within a group:  mt-1 (4px tight stacking)
+  // First message:   mt-0
+  const topMargin = isFirstInGroup ? "mt-5 first:mt-0" : "mt-1";
+
   return (
-    // `group` enables CSS group-hover for the action bar inside MessageActions
-    <div className={`flex gap-3 group ${isClient ? "" : "justify-end"}`}>
+    <div className={`flex gap-2.5 group ${topMargin} ${isClient ? "" : "justify-end"}`}>
+      {/* Avatar — only shown for client messages at the start of a group */}
       {isClient && (
-        <img src={avatar} alt="avatar" className="w-8 h-8 rounded-full flex-shrink-0 mt-1" />
+        <div className="w-8 flex-shrink-0">
+          {isFirstInGroup ? (
+            <img src={avatar} alt="avatar" className="w-8 h-8 rounded-full object-cover ring-1 ring-black/[0.04]" />
+          ) : null}
+        </div>
       )}
 
-      <div className="flex-1 max-w-lg relative">
+      <div className={`flex-1 max-w-lg relative ${!isClient ? "flex flex-col items-end" : ""}`}>
         {/* Floating action bar (copy + translate) — visible on row hover */}
         <MessageActions
           text={message.text ?? ""}
@@ -74,10 +87,12 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
 
         {/* Speech bubble */}
         <div
-          className={`p-4 rounded-2xl shadow-sm ${
+          className={`px-3.5 py-2.5 text-[14px] leading-relaxed ${
             isClient
-              ? "bg-white text-slate-800 rounded-tl-sm"
-              : "bg-blue-600 text-white rounded-tr-sm ml-auto"
+              ? `bg-white text-[var(--text-primary)] shadow-[var(--shadow-xs)] border border-[var(--border-subtle)]
+                 ${isFirstInGroup ? "rounded-2xl rounded-tl-md" : "rounded-2xl"}`
+              : `bg-[var(--accent-primary)] text-white
+                 ${isFirstInGroup ? "rounded-2xl rounded-tr-md" : "rounded-2xl"}`
           }`}
         >
           <p className={isTranslating ? "opacity-50" : ""}>
@@ -88,7 +103,7 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
         {/* Translation footer */}
         {translation && !isTranslating && (
           <div
-            className={`mt-1 flex items-center gap-1 text-xs text-slate-400 ${
+            className={`mt-1 flex items-center gap-1 text-[10px] text-[var(--text-tertiary)] ${
               isClient ? "ml-1" : "mr-1 justify-end"
             }`}
           >
@@ -97,22 +112,24 @@ export function MessageBubble({ message, avatar }: MessageBubbleProps) {
             <span>·</span>
             <button
               onClick={() => setShowOriginal((p) => !p)}
-              className="text-blue-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
+              className="text-[var(--accent-blue)] hover:underline underline-offset-2 transition-colors duration-120"
             >
               {showOriginal ? "Afișează traducerea" : "Vezi originalul"}
             </button>
           </div>
         )}
 
-        {/* Timestamp */}
-        <div
-          className={`flex items-center gap-2 mt-1 text-xs text-slate-500 ${
-            isClient ? "ml-2" : "mr-2 justify-end"
-          }`}
-        >
-          {!isClient && <CheckCheck className="w-4 h-4 text-blue-500" />}
-          <span>{time}</span>
-        </div>
+        {/* Timestamp — only shown at the end of a group */}
+        {isLastInGroup && (
+          <div
+            className={`flex items-center gap-1.5 mt-1 text-[10px] text-[var(--text-tertiary)]/70 ${
+              isClient ? "ml-1" : "mr-1 justify-end"
+            }`}
+          >
+            {!isClient && <CheckCheck className="w-3 h-3 text-emerald-400/80" />}
+            <span className="tabular-nums">{time}</span>
+          </div>
+        )}
       </div>
     </div>
   );

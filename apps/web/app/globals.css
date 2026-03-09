@@ -1,26 +1,113 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Backgrounds ─────────────────────────────────── */
+  --bg-page: #F7F6F3;
+  --bg-surface: #FFFFFF;
+  --bg-surface-hover: #F9FAFB;
+  --under-bg: #ECEAE5;
+  --sidebar-bg: #F7F6F3;
+
+  /* ── Text ────────────────────────────────────────── */
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --text-quaternary: #D1D5DB;
+
+  /* ── Borders ─────────────────────────────────────── */
+  --border-default: #E5E7EB;
+  --border-subtle: #F3F4F6;
+
+  /* ── Accent ──────────────────────────────────────── */
+  --accent-primary: #111827;
+  --accent-blue: #2563EB;
+
+  /* ── Radii ───────────────────────────────────────── */
+  --radius-card: 16px;
+  --radius-button: 10px;
+  --radius-input: 10px;
+  --radius-badge: 6px;
+
+  /* ── Shadows ─────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.03);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-page);
+  --color-foreground: var(--text-primary);
+  --color-surface: var(--bg-surface);
+  --color-surface-hover: var(--bg-surface-hover);
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent: var(--accent-primary);
+  --color-accent-blue: var(--accent-blue);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --shadow-card: var(--shadow-card);
+  --shadow-dropdown: var(--shadow-dropdown);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Smooth scrollbar ──────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-quaternary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ── Premium range slider ──────────────────────────── */
+.slider-premium::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.slider-premium::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 5px rgba(17, 24, 39, 0.08);
+}
+
+.slider-premium::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.slider-premium::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-default);
 }

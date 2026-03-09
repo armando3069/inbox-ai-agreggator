@@ -12,6 +12,19 @@ import {
 } from "lucide-react";
 import type { UseKnowledgeBaseReturn } from "@/hooks/useKnowledgeBase";
 
+// ── Shared styles (must mirror ConfigurationTab tokens) ──────────────────────
+
+const CARD = "rounded-2xl border border-[#E7E3DC] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]";
+const ICON_BOX = "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F3F4F6]";
+const ICON = "h-[18px] w-[18px] text-[var(--text-secondary)]";
+const CARD_TITLE = "text-[14px] font-semibold text-[var(--text-primary)] leading-tight";
+const CARD_DESC = "mt-1 text-[13px] text-[var(--text-tertiary)] leading-relaxed";
+const PRIMARY_BTN = "inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--accent-primary)] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#1F2937] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 transition-all duration-150 ease-out shadow-[var(--shadow-xs)]";
+const TEXTAREA = "w-full rounded-xl border border-[#E7E3DC] bg-white px-4 py-3 text-[13px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/8 focus:border-[var(--text-tertiary)] resize-none transition-all duration-150 ease-out leading-relaxed";
+const TH_CELL = "px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]";
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export interface KnowledgeBaseTabProps {
   kb: UseKnowledgeBaseReturn;
 }
@@ -44,48 +57,46 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
   }, [loadKbFiles]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
 
-      {/* Upload area */}
+      {/* ── Upload / Dropzone ────────────────────────────────────── */}
       <div
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => uploadStatus?.state !== "uploading" && fileInputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 transition-colors ${
+        className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 transition-all duration-150 ease-out ${
           uploadStatus?.state === "uploading"
-            ? "cursor-wait border-blue-300 bg-blue-50/50"
+            ? "cursor-wait border-[var(--text-tertiary)] bg-[var(--bg-surface-hover)]"
             : isDragging
-            ? "border-blue-400 bg-blue-50"
-            : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/50"
+            ? "border-[var(--text-tertiary)] bg-[var(--bg-surface-hover)]"
+            : "border-[var(--border-default)] bg-white hover:border-[var(--text-tertiary)] hover:bg-[var(--bg-surface-hover)]"
         }`}
       >
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-          uploadStatus?.state === "uploading" ? "bg-blue-100" : "bg-blue-50"
-        }`}>
+        <div className={ICON_BOX.replace("h-9 w-9", "h-11 w-11")}>
           {uploadStatus?.state === "uploading" ? (
-            <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+            <Loader2 className="h-5 w-5 text-[var(--text-secondary)] animate-spin" />
           ) : (
-            <Upload className="h-5 w-5 text-blue-600" />
+            <Upload className="h-5 w-5 text-[var(--text-secondary)]" />
           )}
         </div>
 
         {uploadStatus?.state === "uploading" ? (
           <div className="text-center">
-            <p className="font-medium text-slate-700">
-              Se procesează <span className="text-blue-600">{uploadStatus.name}</span>…
+            <p className="text-[14px] font-medium text-[var(--text-primary)]">
+              Se procesează <span className="font-semibold">{uploadStatus.name}</span>…
             </p>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
               Parsare PDF, creare embeddings…
             </p>
           </div>
         ) : (
           <div className="text-center">
-            <p className="font-medium text-slate-700">
+            <p className="text-[14px] font-medium text-[var(--text-primary)]">
               Trage un fișier PDF aici
             </p>
-            <p className="mt-1 text-sm text-slate-400">
-              sau click pentru a selecta — doar fișiere <strong>.pdf</strong>
+            <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+              sau click pentru a selecta — doar fișiere <strong className="font-medium text-[var(--text-secondary)]">.pdf</strong>
             </p>
           </div>
         )}
@@ -100,101 +111,105 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
         />
       </div>
 
-      {/* Upload result banner */}
+      {/* ── Upload result banner ─────────────────────────────────── */}
       {uploadStatus && uploadStatus.state !== "uploading" && (
-        <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
+        <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
           uploadStatus.state === "done"
-            ? "border-green-200 bg-green-50"
-            : "border-red-200 bg-red-50"
+            ? "border-emerald-200/60 bg-emerald-50/50"
+            : "border-red-200/60 bg-red-50/50"
         }`}>
           <div className="flex-1">
             {uploadStatus.state === "done" ? (
-              <p className="text-sm text-green-700">
+              <p className="text-[13px] text-emerald-700">
                 <span className="font-semibold">{uploadStatus.name}</span> indexat cu succes
-                — <span className="font-semibold">{uploadStatus.chunks}</span> chunks.
+                — <span className="font-semibold tabular-nums">{uploadStatus.chunks}</span> chunks.
               </p>
             ) : (
-              <p className="text-sm text-red-600">{uploadStatus.message}</p>
+              <p className="text-[13px] text-red-600">{uploadStatus.message}</p>
             )}
           </div>
           <button
-            onClick={() => setUploadStatus(null)}
-            className="shrink-0 text-slate-400 hover:text-slate-600"
+            onClick={(e) => { e.stopPropagation(); setUploadStatus(null); }}
+            className="shrink-0 p-1 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] transition-all duration-150 ease-out"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
 
-      {/* Indexed files */}
+      {/* ── Indexed files ────────────────────────────────────────── */}
       {kbFilesLoading ? (
-        <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+        <div className="flex items-center justify-center gap-2 py-8 text-[13px] text-[var(--text-tertiary)]">
           <Loader2 className="h-4 w-4 animate-spin" />
           Se încarcă fișierele…
         </div>
       ) : kbFiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
-          <FileText className="h-8 w-8 text-slate-300" />
-          <p className="text-sm text-slate-400">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--border-default)] bg-white py-12 text-center">
+          <div className={ICON_BOX.replace("h-9 w-9", "h-11 w-11")}>
+            <FileText className="h-5 w-5 text-[var(--text-tertiary)]" />
+          </div>
+          <p className="text-[13px] text-[var(--text-tertiary)]">
             Niciun fișier indexat. Încarcă un PDF pentru a începe.
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-white">
+          {/* Header row */}
+          <div className="flex items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-5 py-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
               Fișiere indexate
             </p>
             <button
               onClick={handleClearKb}
               disabled={clearingKb}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium text-red-500 hover:bg-red-50/60 disabled:opacity-40 transition-all duration-150 ease-out"
             >
               {clearingKb ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3 w-3" />
               )}
               Șterge tot
             </button>
           </div>
-          <table className="w-full text-sm">
+
+          {/* Table */}
+          <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Fișier
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Chunks
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Indexat
-                </th>
+              <tr className="border-b border-[var(--border-subtle)]">
+                <th className={TH_CELL}>Fișier</th>
+                <th className={`${TH_CELL} text-center`}>Chunks</th>
+                <th className={`${TH_CELL} text-center`}>Indexat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {kbFiles.map((file, i) => (
-                <tr key={i} className="transition-colors hover:bg-slate-50">
-                  <td className="px-5 py-3.5">
+                <tr
+                  key={i}
+                  className="border-b border-[var(--border-subtle)] last:border-b-0 transition-colors duration-150 ease-out hover:bg-[var(--bg-surface-hover)]"
+                >
+                  <td className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
-                      <FileText className="h-4 w-4 shrink-0 text-red-400" />
-                      <span className="font-medium text-slate-700 truncate max-w-[200px]">
+                      <FileText className="h-4 w-4 shrink-0 text-[var(--text-tertiary)]" />
+                      <span className="font-medium text-[var(--text-primary)] truncate max-w-[240px]">
                         {file.name}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-center text-slate-600">
+                  <td className="px-4 py-3 text-center text-[var(--text-secondary)] tabular-nums">
                     {file.chunks}
                   </td>
-                  <td className="px-4 py-3.5 text-center text-slate-500">
+                  <td className="px-4 py-3 text-center text-[var(--text-tertiary)]">
                     {file.uploadedAt}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <div className="border-t border-slate-100 bg-slate-50 px-5 py-2.5">
-            <p className="text-xs text-slate-400">
+
+          {/* Footer */}
+          <div className="border-t border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-5 py-2.5">
+            <p className="text-[11px] text-[var(--text-tertiary)] tabular-nums">
               {kbFiles.length} fișier{kbFiles.length !== 1 ? "e" : ""} ·{" "}
               {kbFiles.reduce((s, f) => s + f.chunks, 0)} chunks total
             </p>
@@ -202,17 +217,17 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
         </div>
       )}
 
-      {/* Q&A section */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-            <MessageSquare className="h-5 w-5 text-emerald-600" />
+      {/* ── Ask Knowledge Base ────────────────────────────────────── */}
+      <div className={CARD}>
+        <div className="flex items-start gap-3.5 mb-5">
+          <div className={ICON_BOX}>
+            <MessageSquare className={ICON} />
           </div>
           <div>
-            <p className="font-semibold text-slate-800">
+            <p className={CARD_TITLE}>
               Întreabă Knowledge Base-ul
             </p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className={CARD_DESC}>
               AI-ul va răspunde <em>exclusiv</em> pe baza documentelor PDF
               încărcate.
             </p>
@@ -230,39 +245,39 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
           }}
           rows={3}
           placeholder="Ex: Care este procedura de returnare a produselor?"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 resize-none"
+          className={TEXTAREA}
         />
 
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-400">
+          <p className="text-[11px] text-[var(--text-tertiary)]">
             Enter pentru a trimite · Shift+Enter pentru linie nouă
           </p>
           <button
             onClick={handleKbAsk}
             disabled={kbAnswerLoading || !kbQuestion.trim()}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            className={PRIMARY_BTN}
           >
             {kbAnswerLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="h-3.5 w-3.5" />
             )}
             {kbAnswerLoading ? "Se caută…" : "Întreabă"}
           </button>
         </div>
 
         {kbAnswerError && (
-          <div className="mt-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
-            <p className="text-sm text-red-600">{kbAnswerError}</p>
+          <div className="mt-3 rounded-xl border border-red-200/60 bg-red-50/50 px-4 py-3">
+            <p className="text-[13px] text-red-600">{kbAnswerError}</p>
           </div>
         )}
 
         {kbAnswer && (
-          <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-500">
+          <div className="mt-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-4 py-3">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">
               Răspuns din Knowledge Base
             </p>
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{kbAnswer}</p>
+            <p className="text-[13px] text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{kbAnswer}</p>
           </div>
         )}
       </div>

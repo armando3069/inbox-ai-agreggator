@@ -7,7 +7,8 @@ import {
   Loader2,
   ChevronDown,
   SlidersHorizontal,
-  ShieldAlert,
+  ShieldCheck,
+  Check,
 } from "lucide-react";
 import { aiAssistantService } from "@/services/ai-assistant/ai-assistant.service";
 import type { ResponseTone } from "@/services/ai-assistant/ai-assistant.types";
@@ -21,6 +22,16 @@ const TONE_OPTIONS: { value: ResponseTone; label: string; description: string }[
   { value: "casual",       label: "Casual",        description: "Relaxed and conversational" },
   { value: "strict",       label: "Strict",        description: "Direct and minimal" },
 ];
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
+
+const CARD = "rounded-2xl border border-[#E7E3DC] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]";
+const ICON_BOX = "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F3F4F6]";
+const ICON = "h-[18px] w-[18px] text-[var(--text-secondary)]";
+const CARD_TITLE = "text-[14px] font-semibold text-[var(--text-primary)] leading-tight";
+const CARD_DESC = "mt-1 text-[13px] text-[var(--text-tertiary)] leading-relaxed";
+const PRIMARY_BTN = "inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--accent-primary)] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#1F2937] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 transition-all duration-150 ease-out shadow-[var(--shadow-xs)]";
+const TEXTAREA = "w-full rounded-xl border border-[#E7E3DC] bg-white px-4 py-3 text-[13px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/8 focus:border-[var(--text-tertiary)] resize-none transition-all duration-150 ease-out leading-relaxed";
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -40,13 +51,13 @@ function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${
-        checked ? "bg-blue-600" : "bg-slate-200"
+      className={`relative inline-flex h-[22px] w-[40px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]/20 disabled:cursor-not-allowed disabled:opacity-40 ${
+        checked ? "bg-[var(--accent-primary)]" : "bg-[var(--border-default)]"
       }`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
-          checked ? "translate-x-5" : "translate-x-0"
+        className={`inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out ${
+          checked ? "translate-x-[18px]" : "translate-x-0"
         }`}
       />
     </button>
@@ -71,40 +82,46 @@ function ToneSelector({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((p) => !p)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border-default)] bg-white px-4 py-2.5 text-[13px] text-[var(--text-primary)] transition-all duration-150 ease-out hover:border-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/8 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <div className="text-left">
           <span className="font-medium">{selected.label}</span>
-          <span className="ml-2 text-slate-400">— {selected.description}</span>
+          <span className="ml-2 text-[var(--text-tertiary)]">— {selected.description}</span>
         </div>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-[var(--text-tertiary)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
-        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-          {TONE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-slate-50 ${
-                opt.value === value ? "bg-blue-50" : ""
-              }`}
-            >
-              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-blue-500">
-                {opt.value === value && (
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                )}
-              </div>
-              <div>
-                <p className="font-medium text-slate-800">{opt.label}</p>
-                <p className="text-xs text-slate-400">{opt.description}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+        <>
+          {/* Backdrop to close */}
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-[var(--border-default)] bg-white shadow-[var(--shadow-dropdown)]">
+            {TONE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-[var(--bg-surface-hover)] ${
+                  opt.value === value ? "bg-[var(--bg-surface-hover)]" : ""
+                }`}
+              >
+                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                  opt.value === value ? "border-[var(--accent-primary)]" : "border-[var(--border-default)]"
+                }`}>
+                  {opt.value === value && (
+                    <div className="h-2 w-2 rounded-full bg-[var(--accent-primary)]" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-[var(--text-primary)]">{opt.label}</p>
+                  <p className="text-[12px] text-[var(--text-tertiary)]">{opt.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -119,32 +136,32 @@ function ConfidenceSlider({
   onChange: (v: number) => void;
   disabled?: boolean;
 }) {
-  const color =
-    value >= 75 ? "bg-green-500" :
-    value >= 50 ? "bg-yellow-500" :
-                  "bg-red-400";
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-slate-600">Confidence threshold</span>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${color}`}>
+        <span className="text-[13px] text-[var(--text-secondary)]">Confidence threshold</span>
+        <span className="rounded-full bg-[var(--bg-surface-hover)] border border-[var(--border-default)] px-2.5 py-0.5 text-[12px] font-semibold text-[var(--text-primary)] tabular-nums">
           {value}%
         </span>
       </div>
 
-      <input
-        type="range"
-        min={0}
-        max={100}
-        step={5}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(parseInt(e.target.value, 10))}
-        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-      />
+      <div className="relative">
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(parseInt(e.target.value, 10))}
+          className="slider-premium h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[var(--border-default)] disabled:cursor-not-allowed disabled:opacity-40"
+          style={{
+            background: `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${value}%, var(--border-default) ${value}%, var(--border-default) 100%)`,
+          }}
+        />
+      </div>
 
-      <div className="flex justify-between text-xs text-slate-400">
+      <div className="flex justify-between text-[11px] text-[var(--text-tertiary)]">
         <span>0% — always respond</span>
         <span>100% — very strict</span>
       </div>
@@ -196,36 +213,36 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
     <div className="space-y-4">
 
       {configError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-600">{configError}</p>
+        <div className="rounded-xl border border-red-200/60 bg-red-50/50 px-4 py-3">
+          <p className="text-[13px] text-red-600">{configError}</p>
         </div>
       )}
 
       {/* ── Auto-reply toggle ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className={CARD}>
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-              <Bot className="h-5 w-5 text-blue-600" />
+          <div className="flex items-start gap-3.5">
+            <div className={ICON_BOX}>
+              <Bot className={ICON} />
             </div>
             <div>
-              <p className="font-semibold text-slate-800">
-                Automatically responds to customer questions
+              <p className={CARD_TITLE}>
+                Auto-reply
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className={CARD_DESC}>
                 Asistentul AI va răspunde automat la mesajele primite
                 folosind Knowledge Base-ul configurat.
               </p>
               <span
-                className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                className={`mt-2.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                   autoReply
-                    ? "bg-green-100 text-green-700"
-                    : "bg-slate-100 text-slate-500"
+                    ? "bg-[#ECFDF5] text-[#047857] border border-[#D1FAE5]"
+                    : "bg-[var(--border-subtle)] text-[var(--text-tertiary)] border border-transparent"
                 }`}
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
-                    autoReply ? "bg-green-500" : "bg-slate-400"
+                    autoReply ? "bg-emerald-500" : "bg-[var(--text-quaternary)]"
                   }`}
                 />
                 {autoReply ? "Activ" : "Inactiv"}
@@ -241,21 +258,21 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
       </div>
 
       {/* ── Response Tone ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
-            <SlidersHorizontal className="h-5 w-5 text-violet-600" />
+      <div className={CARD}>
+        <div className="flex items-start gap-3.5 mb-5">
+          <div className={ICON_BOX}>
+            <SlidersHorizontal className={ICON} />
           </div>
           <div>
-            <p className="font-semibold text-slate-800">Response Tone</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className={CARD_TITLE}>Response Tone</p>
+            <p className={CARD_DESC}>
               Definește stilul de comunicare al asistentului AI în conversații.
             </p>
           </div>
         </div>
 
         {configLoading ? (
-          <div className="flex items-center gap-2 py-3 text-sm text-slate-400">
+          <div className="flex items-center gap-2 py-3 text-[13px] text-[var(--text-tertiary)]">
             <Loader2 className="h-4 w-4 animate-spin" />
             Se încarcă…
           </div>
@@ -272,15 +289,15 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
       </div>
 
       {/* ── Confidence Threshold ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-start gap-4 mb-5">
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
-            <ShieldAlert className="h-5 w-5 text-amber-600" />
+      <div className={CARD}>
+        <div className="flex items-start gap-3.5 mb-5">
+          <div className={ICON_BOX}>
+            <ShieldCheck className={ICON} />
           </div>
           <div>
-            <p className="font-semibold text-slate-800">Confidence Threshold</p>
-            <p className="mt-1 text-sm text-slate-500">
-              AI-ul răspunde automat <strong>numai</strong> dacă gradul de
+            <p className={CARD_TITLE}>Confidence Threshold</p>
+            <p className={CARD_DESC}>
+              AI-ul răspunde automat <strong className="font-medium text-[var(--text-secondary)]">numai</strong> dacă gradul de
               siguranță depășește pragul setat. Sub prag, mesajul rămâne
               pentru review manual.
             </p>
@@ -288,7 +305,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
         </div>
 
         {configLoading ? (
-          <div className="flex items-center gap-2 py-3 text-sm text-slate-400">
+          <div className="flex items-center gap-2 py-3 text-[13px] text-[var(--text-tertiary)]">
             <Loader2 className="h-4 w-4 animate-spin" />
             Se încarcă…
           </div>
@@ -300,30 +317,31 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
           />
         )}
 
-        {/* Save button — only appears after the user moves the slider */}
         <div className="mt-4 flex justify-end">
           <button
             onClick={() => saveConfig({ confidenceThreshold: threshold })}
             disabled={savingConfig || configLoading}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            className={PRIMARY_BTN}
           >
             {savingConfig ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : null}
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
             Salvează pragul
           </button>
         </div>
       </div>
 
       {/* ── Test AI reply ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
-            <Send className="h-5 w-5 text-violet-600" />
+      <div className={CARD}>
+        <div className="flex items-start gap-3.5 mb-5">
+          <div className={ICON_BOX}>
+            <Send className={ICON} />
           </div>
           <div>
-            <p className="font-semibold text-slate-800">Test AI Reply</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className={CARD_TITLE}>Test AI Reply</p>
+            <p className={CARD_DESC}>
               Trimite un mesaj de test și vezi răspunsul generat de AI cu
               tonul configurat mai sus.
             </p>
@@ -341,39 +359,39 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
           }}
           rows={3}
           placeholder="Scrie un mesaj de test..."
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 resize-none"
+          className={TEXTAREA}
         />
 
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-400">
+          <p className="text-[11px] text-[var(--text-tertiary)]">
             Enter pentru a trimite · Shift+Enter pentru linie nouă
           </p>
           <button
             onClick={handleTestSubmit}
             disabled={testLoading || !testInput.trim()}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            className={PRIMARY_BTN}
           >
             {testLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="h-3.5 w-3.5" />
             )}
             {testLoading ? "Se generează..." : "Test"}
           </button>
         </div>
 
         {testError && (
-          <div className="mt-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
-            <p className="text-sm text-red-600">{testError}</p>
+          <div className="mt-3 rounded-xl border border-red-200/60 bg-red-50/50 px-4 py-3">
+            <p className="text-[13px] text-red-600">{testError}</p>
           </div>
         )}
 
         {testReply && (
-          <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-400">
+          <div className="mt-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-4 py-3">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">
               Răspuns AI
             </p>
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{testReply}</p>
+            <p className="text-[13px] text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{testReply}</p>
           </div>
         )}
       </div>

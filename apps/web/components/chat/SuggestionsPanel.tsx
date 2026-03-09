@@ -8,27 +8,27 @@ interface SuggestionsPanelProps {
 
 export function SuggestionsPanel({ suggestions, isLoading, onSelect }: SuggestionsPanelProps) {
   return (
-    <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100">
+    <div className="mb-3 p-3 bg-[var(--bg-surface-hover)] rounded-xl border border-[var(--border-default)]">
       <div className="flex items-center gap-2 mb-2">
-        <Zap className="w-4 h-4 text-purple-600" />
-        <span className="text-xs font-semibold text-slate-700">Răspunsuri Sugerate</span>
+        <Zap className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+        <span className="text-[12px] font-medium text-[var(--text-primary)]">Răspunsuri Sugerate</span>
         {isLoading && (
-          <span className="text-xs text-slate-400 ml-auto animate-pulse">Se generează...</span>
+          <span className="text-[11px] text-[var(--text-tertiary)] ml-auto animate-pulse">Se generează...</span>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {isLoading
           ? [0, 1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-9 bg-white rounded-lg border border-slate-200 animate-pulse"
+                className="h-9 bg-white/60 rounded-lg animate-pulse"
               />
             ))
           : suggestions.map((suggestion, idx) => (
               <button
                 key={idx}
                 onClick={() => onSelect(suggestion)}
-                className="text-left p-2 bg-white hover:bg-purple-50 rounded-lg text-xs text-slate-700 border border-slate-200 hover:border-purple-300 transition-all"
+                className="text-left p-2 bg-white hover:bg-white/80 rounded-lg text-[12px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] transition-all duration-120 ease-out leading-relaxed"
               >
                 {suggestion}
               </button>
