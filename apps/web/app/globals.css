@@ -2,36 +2,38 @@
 
 :root {
   /* ── Backgrounds ─────────────────────────────────── */
-  --bg-page: #F5F4F1;
+  --bg-page: #F7F6F3;
   --bg-surface: #FFFFFF;
-  --bg-surface-hover: #F7F6F3;
+  --bg-surface-hover: #F9FAFB;
   --under-bg: #ECEAE5;
   --sidebar-bg: #F7F6F3;
 
   /* ── Text ────────────────────────────────────────── */
-  --text-primary: #1A1A1A;
+  --text-primary: #111827;
   --text-secondary: #6B7280;
   --text-tertiary: #9CA3AF;
+  --text-quaternary: #D1D5DB;
 
   /* ── Borders ─────────────────────────────────────── */
-  --border-default: #E7E3DC;
-  --border-subtle: #EEEBE6;
+  --border-default: #E5E7EB;
+  --border-subtle: #F3F4F6;
 
   /* ── Accent ──────────────────────────────────────── */
-  --accent-primary: #111111;
+  --accent-primary: #111827;
   --accent-blue: #2563EB;
 
   /* ── Radii ───────────────────────────────────────── */
   --radius-card: 16px;
   --radius-button: 10px;
-  --radius-input: 8px;
-  --radius-badge: 8px;
+  --radius-input: 10px;
+  --radius-badge: 6px;
 
   /* ── Shadows ─────────────────────────────────────── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
   --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.03);
-  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0px 1px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 @theme inline {
@@ -55,4 +57,23 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Smooth scrollbar ──────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-quaternary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
 }

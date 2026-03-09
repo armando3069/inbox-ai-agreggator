@@ -78,10 +78,10 @@ function NavItemButton({
     <Link
       href={item.href}
       className={`
-        relative flex items-center gap-3 rounded-lg transition-all duration-150
-        ${expanded ? "px-3 py-[9px]" : "justify-center p-2.5"}
+        relative flex items-center gap-2.5 rounded-lg transition-all duration-120 ease-out
+        ${expanded ? "px-3 py-2" : "justify-center p-2.5"}
         ${isActive
-          ? "bg-white/70 text-[var(--text-primary)] font-medium shadow-[var(--shadow-sm)]"
+          ? "bg-white/80 text-[var(--text-primary)] font-medium shadow-[var(--shadow-xs)]"
           : "text-[var(--text-secondary)] hover:bg-white/50 hover:text-[var(--text-primary)]"
         }
       `}
@@ -98,7 +98,7 @@ function NavItemButton({
         <Tooltip.Portal>
           <Tooltip.Content
             side="right"
-            sideOffset={10}
+            sideOffset={12}
             className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)] animate-in fade-in-0 zoom-in-95"
           >
             {item.label}
@@ -158,7 +158,7 @@ export function AppSidebar() {
     <Tooltip.Provider>
       <div
         className={`
-          flex flex-col bg-[var(--sidebar-bg)] transition-[width] duration-200 ease-in-out
+          flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-default)] transition-[width] duration-200 ease-in-out
           ${expanded ? "w-[232px]" : "w-[56px]"}
         `}
       >
@@ -177,7 +177,7 @@ export function AppSidebar() {
           {expanded && (
             <button
               onClick={toggle}
-              className="p-1 rounded-md text-[var(--text-tertiary)] hover:bg-black/[0.04] hover:text-[var(--text-secondary)] transition-colors"
+              className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:bg-black/[0.04] hover:text-[var(--text-secondary)] transition-colors duration-120"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -189,7 +189,7 @@ export function AppSidebar() {
           <div className="flex justify-center pb-1">
             <button
               onClick={toggle}
-              className="p-1 rounded-md text-[var(--text-tertiary)] hover:bg-black/[0.04] hover:text-[var(--text-secondary)] transition-colors"
+              className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:bg-black/[0.04] hover:text-[var(--text-secondary)] transition-colors duration-120"
             >
               <PanelLeftOpen className="w-4 h-4" />
             </button>
@@ -198,7 +198,7 @@ export function AppSidebar() {
 
         {/* ── Primary Nav ─────────────────────────────────────────────── */}
         <div className={`flex-1 overflow-y-auto ${expanded ? "px-3" : "px-2"} pt-1 pb-3`}>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {PRIMARY_NAV.map((item) => {
 
               /* ── Contacts accordion ──────────────────────────────── */
@@ -211,9 +211,9 @@ export function AppSidebar() {
                         setContactsOpen((o) => !o);
                       }}
                       className={`
-                        relative w-full flex items-center gap-3 px-3 py-[9px] rounded-lg transition-all duration-150
+                        relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-120 ease-out
                         ${onContacts
-                          ? "bg-white/70 text-[var(--text-primary)] font-medium shadow-[var(--shadow-sm)]"
+                          ? "bg-white/80 text-[var(--text-primary)] font-medium shadow-[var(--shadow-xs)]"
                           : "text-[var(--text-secondary)] hover:bg-white/50 hover:text-[var(--text-primary)]"
                         }
                       `}
@@ -228,7 +228,7 @@ export function AppSidebar() {
                     </button>
 
                     {contactsOpen && (
-                      <div className="mt-1 space-y-0.5 ml-1">
+                      <div className="mt-0.5 space-y-px ml-1">
                         {CONTACT_CATEGORIES.map((cat) => {
                           const count       = getCatCount(contacts, cat);
                           const isActiveCat = onContacts && currentCategory === cat.id;
@@ -237,7 +237,7 @@ export function AppSidebar() {
                               key={cat.id}
                               href={`/contacts?category=${cat.id}`}
                               className={`
-                                flex items-center justify-between gap-2 pl-8 pr-3 py-[6px] rounded-md text-[13px] transition-all duration-150
+                                flex items-center justify-between gap-2 pl-[30px] pr-3 py-[6px] rounded-md text-[13px] transition-all duration-120 ease-out
                                 ${isActiveCat
                                   ? "bg-white/60 text-[var(--text-primary)] font-medium"
                                   : "text-[var(--text-secondary)] hover:bg-white/40 hover:text-[var(--text-primary)]"
@@ -268,15 +268,15 @@ export function AppSidebar() {
           </div>
 
           {/* ── Tools section ──────────────────────────────────────────── */}
-          <div className="mt-6 pt-4 border-t border-black/[0.06]">
+          <div className="mt-6 pt-4 border-t border-[var(--border-default)]">
             {expanded && (
               <div className="px-3 mb-2">
-                <span className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-widest">
+                <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-widest">
                   Tools
                 </span>
               </div>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {SECONDARY_NAV.map((item) => (
                 <NavItemButton key={item.id} item={item} isActive={isActive(item)} expanded={expanded} />
               ))}
@@ -284,7 +284,7 @@ export function AppSidebar() {
 
             {/* ── Notifications ──────────────────────────────────────── */}
             {expanded && (
-              <div className="mt-4 pt-3 border-t border-black/[0.06]">
+              <div className="mt-4 pt-3 border-t border-[var(--border-default)]">
                 {notifPermission === "unavailable" ? null : notifPermission === "granted" ? (
                   <div className="flex items-center gap-2.5 px-3 py-2 text-emerald-600 rounded-lg">
                     <Bell className="w-4 h-4" />
@@ -299,7 +299,7 @@ export function AppSidebar() {
                 ) : (
                   <button
                     onClick={handleEnableNotifications}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--accent-blue)] hover:bg-blue-50/40 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--accent-blue)] hover:bg-blue-50/40 transition-colors duration-120"
                   >
                     <Bell className="w-4 h-4" />
                     <span className="text-[12px] font-medium">Enable notifications</span>
@@ -309,7 +309,7 @@ export function AppSidebar() {
             )}
 
             {!expanded && (
-              <div className="mt-3 pt-3 border-t border-black/[0.06] flex justify-center">
+              <div className="mt-3 pt-3 border-t border-[var(--border-default)] flex justify-center">
                 {notifPermission === "unavailable" ? null : notifPermission === "granted" ? (
                   <Tooltip.Root delayDuration={0}>
                     <Tooltip.Trigger asChild>
@@ -319,7 +319,7 @@ export function AppSidebar() {
                       </div>
                     </Tooltip.Trigger>
                     <Tooltip.Portal>
-                      <Tooltip.Content side="right" sideOffset={10} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
+                      <Tooltip.Content side="right" sideOffset={12} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
                         Notifications on
                         <Tooltip.Arrow className="fill-[var(--text-primary)]" />
                       </Tooltip.Content>
@@ -333,7 +333,7 @@ export function AppSidebar() {
                       </div>
                     </Tooltip.Trigger>
                     <Tooltip.Portal>
-                      <Tooltip.Content side="right" sideOffset={10} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
+                      <Tooltip.Content side="right" sideOffset={12} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
                         Notifications blocked
                         <Tooltip.Arrow className="fill-[var(--text-primary)]" />
                       </Tooltip.Content>
@@ -342,12 +342,12 @@ export function AppSidebar() {
                 ) : (
                   <Tooltip.Root delayDuration={0}>
                     <Tooltip.Trigger asChild>
-                      <button onClick={handleEnableNotifications} className="p-2.5 rounded-lg text-[var(--accent-blue)] hover:bg-blue-50/40 transition-colors">
+                      <button onClick={handleEnableNotifications} className="p-2.5 rounded-lg text-[var(--accent-blue)] hover:bg-blue-50/40 transition-colors duration-120">
                         <Bell className="w-[18px] h-[18px]" />
                       </button>
                     </Tooltip.Trigger>
                     <Tooltip.Portal>
-                      <Tooltip.Content side="right" sideOffset={10} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
+                      <Tooltip.Content side="right" sideOffset={12} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
                         Enable notifications
                         <Tooltip.Arrow className="fill-[var(--text-primary)]" />
                       </Tooltip.Content>
@@ -360,7 +360,7 @@ export function AppSidebar() {
         </div>
 
         {/* ── User profile ──────────────────────────────────────────── */}
-        <div className={`border-t border-black/[0.06] ${expanded ? "px-3 py-3" : "px-2 py-3"}`}>
+        <div className={`border-t border-[var(--border-default)] ${expanded ? "px-3 py-3" : "px-2 py-3"}`}>
           {expanded ? (
             <div className="flex items-center gap-2.5 px-2 py-1">
               {user?.avatar ? (
@@ -376,7 +376,7 @@ export function AppSidebar() {
               </div>
               <button
                 onClick={handleLogout}
-                className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50/50 transition-colors"
+                className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50/50 transition-colors duration-120"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
@@ -396,7 +396,7 @@ export function AppSidebar() {
                   </div>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="right" sideOffset={10} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
+                  <Tooltip.Content side="right" sideOffset={12} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
                     {user?.name ?? "—"}
                     <Tooltip.Arrow className="fill-[var(--text-primary)]" />
                   </Tooltip.Content>
@@ -404,12 +404,12 @@ export function AppSidebar() {
               </Tooltip.Root>
               <Tooltip.Root delayDuration={0}>
                 <Tooltip.Trigger asChild>
-                  <button onClick={handleLogout} className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50/50 transition-colors">
+                  <button onClick={handleLogout} className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50/50 transition-colors duration-120">
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side="right" sideOffset={10} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
+                  <Tooltip.Content side="right" sideOffset={12} className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-[var(--shadow-dropdown)]">
                     Log out
                     <Tooltip.Arrow className="fill-[var(--text-primary)]" />
                   </Tooltip.Content>
