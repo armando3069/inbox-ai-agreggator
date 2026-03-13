@@ -227,7 +227,7 @@ export default function ContactsPage() {
 
   const handleRowClick = (row: ContactRow) => {
     sessionStorage.setItem("pendingConvId", String(row.id));
-    router.push("/");
+    router.push("/inbox");
   };
 
   // ── Shared table cell classes ──────────────────────────────────────────────

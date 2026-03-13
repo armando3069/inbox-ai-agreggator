@@ -41,7 +41,7 @@ interface NavItem {
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { id: "inbox",    label: "Inbox",        href: "/",             icon: Inbox },
+  { id: "inbox",    label: "Inbox",        href: "/inbox",        icon: Inbox },
   { id: "contacts", label: "Contacts",     href: "/contacts",     icon: Users },
   { id: "ai",       label: "AI Assistant", href: "/ai-assistant", icon: Bot },
 ];
@@ -223,7 +223,7 @@ export function AppSidebar() {
   };
 
   const isActive = (item: NavItem) => {
-    if (item.href === "/") return pathname === "/";
+    if (item.href === "/inbox") return pathname === "/inbox" || pathname === "/";
     return pathname.startsWith(item.href.split("?")[0]);
   };
 
