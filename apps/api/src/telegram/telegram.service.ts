@@ -101,6 +101,40 @@ export class TelegramService {
     return this.telegramApi<TelegramBotInfo>(token, 'getMe');
   }
 
+  // ── Fetch profile photo URL for a Telegram user ───────────────────────────
+
+  private async fetchTelegramProfilePhoto(
+    token: string,
+    telegramUserId: number,
+  ): Promise<string | null> {
+    try {
+      // 1. Get the list of profile photos (only need the first one)
+      const photos = await this.telegramApi<{
+        total_count: number;
+        photos: Array<Array<{ file_id: string; width: number; height: number }>>;
+      }>(token, `getUserProfilePhotos?user_id=${telegramUserId}&limit=1`);
+
+      if (!photos.total_count || !photos.photos[0]?.length) return null;
+
+      // Pick the largest size (last in the inner array)
+      const sizes = photos.photos[0];
+      const bestSize = sizes[sizes.length - 1];
+
+      // 2. Resolve the file_path from the file_id
+      const file = await this.telegramApi<{ file_id: string; file_path?: string }>(
+        token,
+        `getFile?file_id=${bestSize.file_id}`,
+      );
+
+      if (!file.file_path) return null;
+
+      // 3. Build the public download URL
+      return `${this.TELEGRAM_API}/file/bot${token}/${file.file_path}`;
+    } catch {
+      return null;
+    }
+  }
+
   // ── Send a message via a specific bot ────────────────────────────────────
 
   async sendMessage(botToken: string, chatId: string, text: string): Promise<void> {
@@ -336,6 +370,9 @@ export class TelegramService {
 
     if (!conversation) {
       isNew = true;
+      const contactAvatar = msg.from?.id
+        ? await this.fetchTelegramProfilePhoto(platformAccount.access_token, msg.from.id)
+        : null;
       conversation = await this.prisma.conversations.create({
         data: {
           platform_account_id: platformAccount.id,
@@ -343,8 +380,12 @@ export class TelegramService {
           platform: 'telegram',
           contact_name: contactName,
           contact_username: contactUsername,
+          contact_avatar: contactAvatar,
         },
       });
+      this.logger.log(
+        `[TELEGRAM] New conversation ${conversation.id} — profile: name="${contactName ?? 'unknown'}" avatar=${contactAvatar ? 'yes' : 'no'}`,
+      );
     }
 
     // 4. Persist the inbound message
