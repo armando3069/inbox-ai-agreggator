@@ -27,6 +27,9 @@ class PlatformsService {
   connectWhatsapp = (accessToken: string, phoneNumberId: string): Promise<void> =>
     request.post<void>(ROUTES.platforms.whatsappConnect, { accessToken, phoneNumberId });
 
+  connectMessenger = (pageId: string, pageAccessToken: string): Promise<void> =>
+    request.post<void>(ROUTES.platforms.messengerConnect, { pageId, pageAccessToken });
+
   connectEmail = (payload: {
     email: string;
     password: string;

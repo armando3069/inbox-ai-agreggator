@@ -1,4 +1,5 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 
@@ -190,6 +191,22 @@ export class EmailImapService {
     }
   }
 
+  // ── Fetch Gravatar avatar for an email address ────────────────────────────
+
+  private async fetchGravatarUrl(email: string): Promise<string | null> {
+    try {
+      const hash = createHash('md5').update(email.trim().toLowerCase()).digest('hex');
+      // d=404 → return HTTP 404 if no Gravatar exists (avoids generic placeholder)
+      const checkUrl = `https://www.gravatar.com/avatar/${hash}?d=404`;
+      const res = await fetch(checkUrl, { method: 'HEAD' });
+      if (!res.ok) return null;
+      // Store the clean URL (200px, no fallback redirect)
+      return `https://www.gravatar.com/avatar/${hash}?s=200`;
+    } catch {
+      return null;
+    }
+  }
+
   // ── Process a single incoming email ──────────────────────────────────────
 
   private async processIncomingEmail(
@@ -235,6 +252,7 @@ export class EmailImapService {
 
     if (!conversation) {
       isNew = true;
+      const contactAvatar = await this.fetchGravatarUrl(fromAddress);
       conversation = await this.prisma.conversations.create({
         data: {
           platform_account_id: account.id,
@@ -242,6 +260,7 @@ export class EmailImapService {
           platform: 'email',
           contact_name: contactName,
           contact_email: fromAddress,
+          contact_avatar: contactAvatar,
         },
       });
     }

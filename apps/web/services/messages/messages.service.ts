@@ -11,6 +11,8 @@ class MessagesService {
     let url: string;
     if (platform === "whatsapp") {
       url = ROUTES.messages.whatsappReply;
+    } else if (platform === "messenger") {
+      url = ROUTES.messages.messengerReply;
     } else if (platform === "email") {
       url = ROUTES.messages.emailReply;
     } else {

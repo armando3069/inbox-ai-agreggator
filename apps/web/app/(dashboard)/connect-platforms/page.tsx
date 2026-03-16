@@ -82,6 +82,14 @@ const PLATFORMS: PlatformConfig[] = [
     iconClass: "text-emerald-600 dark:text-emerald-400",
   },
   {
+    id: "messenger",
+    label: "Messenger",
+    description: "Conectează pagina ta de Facebook Messenger.",
+    icon: <MessengerIcon />,
+    status: "available",
+    iconClass: "text-blue-500 dark:text-blue-400",
+  },
+  {
     id: "email",
     label: "Email (IMAP/SMTP)",
     description: "Conectează Gmail sau Outlook cu parola de aplicație.",
@@ -195,6 +203,10 @@ function ConnectPlatformsContent() {
   const [waAccessToken, setWaAccessToken]     = useState("");
   const [waPhoneNumberId, setWaPhoneNumberId] = useState("");
 
+  // Messenger fields
+  const [msPageId, setMsPageId]                   = useState("");
+  const [msPageAccessToken, setMsPageAccessToken] = useState("");
+
   // Email fields
   const [emEmail, setEmEmail]               = useState("");
   const [emPassword, setEmPassword]         = useState("");
@@ -215,6 +227,8 @@ function ConnectPlatformsContent() {
     setTgBotToken("");
     setWaAccessToken("");
     setWaPhoneNumberId("");
+    setMsPageId("");
+    setMsPageAccessToken("");
     setEmEmail("");
     setEmPassword("");
     setEmProvider("gmail");
@@ -225,6 +239,26 @@ function ConnectPlatformsContent() {
     setEmSmtpHost("");
     setEmSmtpPort("587");
     setEmSmtpSecure(false);
+  };
+
+  // ── Messenger connect ─────────────────────────────────────────────────────
+
+  const handleMessengerSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setConnectError(null);
+    setIsConnecting(true);
+    try {
+      await platformsService.connectMessenger(msPageId.trim(), msPageAccessToken.trim());
+      setToast("Messenger conectat cu succes.");
+      setConnectedIds((prev) => new Set(prev).add("messenger"));
+      setSelectedId(null);
+      if (!isManaging) setTimeout(() => router.replace("/inbox"), 1500);
+      else setTimeout(() => setToast(null), 2000);
+    } catch (err) {
+      setConnectError(err instanceof Error ? err.message : "A apărut o eroare.");
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   // ── WhatsApp connect ──────────────────────────────────────────────────────
@@ -398,6 +432,18 @@ function ConnectPlatformsContent() {
                 />
               )}
 
+              {selectedId === "messenger" && (
+                <MessengerForm
+                  pageId={msPageId}
+                  pageAccessToken={msPageAccessToken}
+                  onPageIdChange={setMsPageId}
+                  onPageAccessTokenChange={setMsPageAccessToken}
+                  isConnecting={isConnecting}
+                  error={connectError}
+                  onSubmit={handleMessengerSubmit}
+                />
+              )}
+
               {selectedId === "whatsapp" && (
                 <WhatsappForm
                   accessToken={waAccessToken}
@@ -566,6 +612,9 @@ function EmptyConfigPanel() {
         </div>
         <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-card)]">
           <span className="text-emerald-600 dark:text-emerald-400"><WhatsAppIcon /></span>
+        </div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]">
+          <span className="text-blue-500 dark:text-blue-400"><MessengerIcon /></span>
         </div>
         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]">
           <span className="text-orange-500 dark:text-orange-400"><EmailIcon /></span>
@@ -1100,6 +1149,166 @@ function EmailForm({
   );
 }
 
+// ── Messenger form ────────────────────────────────────────────────────────────
+
+const MESSENGER_VERIFY_TOKEN =
+  process.env.NEXT_PUBLIC_MESSENGER_VERIFY_TOKEN ?? "zottis_messenger_verify_token";
+const MESSENGER_WEBHOOK_URL =
+  process.env.NEXT_PUBLIC_MESSENGER_WEBHOOK_URL ??
+  `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/webhooks/messenger`;
+
+function MessengerForm({
+  pageId,
+  pageAccessToken,
+  onPageIdChange,
+  onPageAccessTokenChange,
+  isConnecting,
+  error,
+  onSubmit,
+}: {
+  pageId: string;
+  pageAccessToken: string;
+  onPageIdChange: (v: string) => void;
+  onPageAccessTokenChange: (v: string) => void;
+  isConnecting: boolean;
+  error: string | null;
+  onSubmit: (e: FormEvent) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      {/* ── Credentials card ── */}
+      <div className={`${CARD} p-6`}>
+        <div className="flex items-start gap-3 pb-5 border-b border-[var(--border-subtle)]">
+          <div className={ICON_BOX}>
+            <span className="text-blue-500 dark:text-blue-400"><MessengerIcon /></span>
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
+              Conectează Messenger
+            </h2>
+            <p className="mt-0.5 text-[13px] text-[var(--text-secondary)] leading-relaxed">
+              Facebook Messenger — Graph API
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={onSubmit} className="mt-5 space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="ms-page-id" className={LABEL}>Page ID</label>
+            <input
+              id="ms-page-id"
+              type="text"
+              value={pageId}
+              onChange={(e) => onPageIdChange(e.target.value)}
+              placeholder="108016472517…"
+              required
+              autoFocus
+              className={INPUT}
+            />
+            <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
+              Găsești Page ID în{" "}
+              <span className="font-semibold text-[var(--text-secondary)]">
+                Meta for Developers → App Dashboard → Messenger → Settings
+              </span>
+              .
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="ms-page-token" className={LABEL}>Page Access Token</label>
+            <input
+              id="ms-page-token"
+              type="password"
+              value={pageAccessToken}
+              onChange={(e) => onPageAccessTokenChange(e.target.value)}
+              placeholder="EAAUlx…"
+              required
+              className={INPUT}
+            />
+            <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
+              Generează un token de lungă durată în{" "}
+              <span className="font-semibold text-[var(--text-secondary)]">
+                Messenger → Generate Token
+              </span>
+              .
+            </p>
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <div className="pt-1">
+            <button
+              type="submit"
+              disabled={isConnecting || !pageId.trim() || !pageAccessToken.trim()}
+              className={PRIMARY_BTN}
+            >
+              {isConnecting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {isConnecting ? "Se conectează…" : "Conectează Messenger"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* ── Webhook configuration card ── */}
+      <div className={`${CARD} p-6`}>
+        <div className="mb-5">
+          <p className="text-[13px] font-semibold text-[var(--text-primary)]">Configurare Webhook</p>
+          <p className="mt-0.5 text-[12px] text-[var(--text-secondary)] leading-relaxed">
+            Configurează webhook-ul în Meta Developer Portal.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <CopyField label="Callback URL" value={MESSENGER_WEBHOOK_URL} />
+          <CopyField label="Verify Token" value={MESSENGER_VERIFY_TOKEN} />
+        </div>
+
+        <div className="mt-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-page)] px-4 py-4">
+          <p className="text-[12px] font-semibold text-[var(--text-secondary)] mb-2.5">Pași de urmat</p>
+          <ol className="space-y-2 text-[12px] text-[var(--text-tertiary)] leading-relaxed">
+            <li className="flex gap-2">
+              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">1.</span>
+              <span>
+                Meta for Developers → App Dashboard → Messenger →{" "}
+                <span className="font-semibold text-[var(--text-secondary)]">Webhooks → Add Callback URL</span>
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">2.</span>
+              <span>
+                Lipește URL-ul și Verify Token-ul de mai sus, apasă{" "}
+                <span className="font-semibold text-[var(--text-secondary)]">Verify and Save</span>
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">3.</span>
+              <span>
+                Abonează-te la evenimentul{" "}
+                <code className="rounded border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-primary)]">
+                  messages
+                </code>{" "}
+                pentru pagina ta
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">4.</span>
+              <span>
+                Completează câmpurile de mai sus cu Page ID și Page Access Token, apoi apasă{" "}
+                <span className="font-semibold text-[var(--text-secondary)]">Conectează Messenger</span>
+              </span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Brand icons ───────────────────────────────────────────────────────────────
 
 function TelegramIcon() {
@@ -1144,6 +1353,21 @@ function EmailIcon() {
     >
       <path d="M1.5 8.067v7.433A3 3 0 0 0 4.5 18.5h15a3 3 0 0 0 3-3V8.067l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.067z" />
       <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908z" />
+    </svg>
+  );
+}
+
+function MessengerIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.975 12-11.111S18.627 0 12 0zm1.191 14.963-3.055-3.26-5.963 3.26L10.732 8.6l3.131 3.26L19.752 8.6l-6.561 6.363z" />
     </svg>
   );
 }

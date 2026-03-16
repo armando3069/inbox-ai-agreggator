@@ -20,7 +20,7 @@ const SUGGESTIONS_STALE_MS = 10 * 60 * 1000; // 10 minutes
 const SUGGESTIONS_GC_MS   = 30 * 60 * 1000; // 30 minutes
 
 /** Platforms that count as "chats" (non-email) */
-const CHAT_PLATFORMS = new Set(["telegram", "whatsapp", "teams"]);
+const CHAT_PLATFORMS = new Set(["telegram", "whatsapp", "messenger", "teams"]);
 
 export function ChatLayout() {
   const searchParams = useSearchParams();

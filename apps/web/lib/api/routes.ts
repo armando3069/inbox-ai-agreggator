@@ -30,12 +30,14 @@ export const ROUTES = {
   messages: {
     telegramReply: "/telegram/reply",
     whatsappReply: "/whatsapp/reply",
+    messengerReply: "/messenger/reply",
     emailReply: "/email/reply",
   },
   platforms: {
     accounts: "/platform-accounts",
     telegramConnect: "/telegram/connect",
     whatsappConnect: "/whatsapp/connect",
+    messengerConnect: "/messenger/connect",
     emailConnect: "/email/connect",
     emailDisconnect: (email: string) => `/email/disconnect/${encodeURIComponent(email)}`,
     emailTest: (email: string) => `/email/test/${encodeURIComponent(email)}`,

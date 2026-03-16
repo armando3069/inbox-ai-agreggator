@@ -10,6 +10,8 @@
   --bg-surface-hover:  #F9FAFB;
   --under-bg:          #ECEAE5;
   --sidebar-bg:        #F7F6F3;
+  --bg-200: hsl(53 28.6% 94.5%);
+  --bg-100:hsl(48 33.3% 97.1%);
 
   /* ── Sidebar nav states ───────────────────────────── */
   --sidebar-item-active: rgba(255, 255, 255, 0.80);
