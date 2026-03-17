@@ -30,6 +30,10 @@ const DEFAULT_CONFIG: Omit<AiAssistantConfig, 'userId'> = {
   confidenceThreshold: 70,
 };
 
+// ── Cost constants (simulated pricing) ────────────────────────────────────────
+const COST_PER_1K_IN  = 0.0001; // USD per 1K input  tokens
+const COST_PER_1K_OUT = 0.0002; // USD per 1K output tokens
+
 // ── Ollama shapes ─────────────────────────────────────────────────────────────
 
 interface OllamaMessage {
@@ -40,6 +44,14 @@ interface OllamaMessage {
 interface OllamaResponse {
   message?: { content?: string };
   response?: string;
+  prompt_eval_count?: number; // tokens consumed by the prompt
+  eval_count?: number;        // tokens generated in the response
+}
+
+interface OllamaResult {
+  text: string;
+  tokensIn: number;
+  tokensOut: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,7 +110,7 @@ export class AiAssistantService {
 
   // ── Ollama HTTP helper ─────────────────────────────────────────────────────
 
-  private async callOllama(messages: OllamaMessage[]): Promise<string> {
+  private async callOllama(messages: OllamaMessage[]): Promise<OllamaResult> {
     const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? OLLAMA_DEFAULTS.url;
     const model = this.config.get<string>('OLLAMA_MODEL') ?? OLLAMA_DEFAULTS.model;
 
@@ -114,7 +126,38 @@ export class AiAssistantService {
     }
 
     const data = (await res.json()) as OllamaResponse;
-    return (data.message?.content ?? data.response ?? '').trim();
+    const text = (data.message?.content ?? data.response ?? '').trim();
+    const tokensIn  = data.prompt_eval_count ?? 0;
+    const tokensOut = data.eval_count ?? 0;
+    return { text, tokensIn, tokensOut };
+  }
+
+  // ── Log AI usage to DB ────────────────────────────────────────────────────
+
+  private async logUsage(opts: {
+    userId?: number;
+    conversationId?: number;
+    tokensIn: number;
+    tokensOut: number;
+  }): Promise<void> {
+    const model = this.config.get<string>('OLLAMA_MODEL') ?? OLLAMA_DEFAULTS.model;
+    const costUsd =
+      (opts.tokensIn  / 1000) * COST_PER_1K_IN +
+      (opts.tokensOut / 1000) * COST_PER_1K_OUT;
+    try {
+      await this.prisma.ai_usage_logs.create({
+        data: {
+          user_id:         opts.userId ?? null,
+          conversation_id: opts.conversationId ?? null,
+          model,
+          tokens_in:  opts.tokensIn,
+          tokens_out: opts.tokensOut,
+          cost_usd:   costUsd,
+        },
+      });
+    } catch (e) {
+      this.logger.warn('[AI] Failed to log usage', e);
+    }
   }
 
   // ── Confidence estimation ──────────────────────────────────────────────────
@@ -137,8 +180,8 @@ export class AiAssistantService {
       'by the context above. Reply ONLY with a single integer number between 0 and 100.';
 
     try {
-      const raw = await this.callOllama([{ role: 'user', content: prompt }]);
-      const match = raw.match(/\d+/);
+      const { text } = await this.callOllama([{ role: 'user', content: prompt }]);
+      const match = text.match(/\d+/);
       if (match) {
         const num = parseInt(match[0], 10);
         if (num >= 0 && num <= 100) return num;
@@ -195,10 +238,12 @@ export class AiAssistantService {
       '{"suggestions": ["text", "text", "text", "text"]}';
 
     try {
-      const raw = await this.callOllama([
+      const { text: raw, tokensIn, tokensOut } = await this.callOllama([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ]);
+
+      void this.logUsage({ conversationId, tokensIn, tokensOut });
 
       const jsonMatch = raw.match(/\{[\s\S]*"suggestions"[\s\S]*\}/);
       if (jsonMatch) {
@@ -245,10 +290,12 @@ export class AiAssistantService {
     const user = `Translate to ${dto.targetLanguage}:\n${JSON.stringify(text)}`;
 
     try {
-      const raw = await this.callOllama([
+      const { text: raw, tokensIn, tokensOut } = await this.callOllama([
         { role: 'system', content: system },
         { role: 'user', content: user },
       ]);
+
+      void this.logUsage({ tokensIn, tokensOut });
 
       const match = raw.match(/\{[\s\S]*\}/);
       if (match) {
@@ -285,10 +332,12 @@ export class AiAssistantService {
 
   async generateSimpleReply(text: string, userId?: number): Promise<string> {
     const tone = userId !== undefined ? this.getConfig(userId).responseTone : 'professional';
-    return this.callOllama([
+    const { text: reply, tokensIn, tokensOut } = await this.callOllama([
       { role: 'system', content: TONE_PROMPTS[tone] },
       { role: 'user', content: text },
     ]);
+    void this.logUsage({ userId, tokensIn, tokensOut });
+    return reply;
   }
 
   // ── Public: reply with conversation history (+ optional KB RAG) ──────────
@@ -360,7 +409,8 @@ export class AiAssistantService {
       messages.push({ role: 'user', content: latestUserMessage });
     }
 
-    const reply = await this.callOllama(messages);
+    const { text: reply, tokensIn, tokensOut } = await this.callOllama(messages);
+    void this.logUsage({ userId, conversationId, tokensIn, tokensOut });
     // No document context → assume reasonable confidence
     return { reply, confidence: 80 };
   }
