@@ -49,8 +49,15 @@ const PRIMARY_NAV: NavItem[] = [
 ];
 
 const SECONDARY_NAV: NavItem[] = [
-  { id: "sentiment", label: "Sentiment Analysis", href: "#",                          icon: TrendingUp },
-  { id: "platforms", label: "Manage Platforms",    href: "/connect-platforms?manage=1", icon: Cable },
+  { id: "platforms", label: "Manage Platforms", href: "/connect-platforms?manage=1", icon: Cable },
+];
+
+// ── Analytics accordion sub-items ─────────────────────────────────────────────
+type AnalyticsItem = { id: string; label: string; href: string };
+const ANALYTICS_ITEMS: AnalyticsItem[] = [
+  { id: "token-usage", label: "Token Usage", href: "/analytics/token-usage" },
+  { id: "cost",        label: "Cost",        href: "/analytics/cost" },
+  { id: "messages",    label: "Messages",    href: "/analytics/messages" },
 ];
 
 // ── Inbox accordion categories ────────────────────────────────────────────────
@@ -318,15 +325,28 @@ export function AppSidebar() {
 
   const onInbox         = pathname === "/inbox" || pathname === "/";
   const onContacts      = pathname === "/contacts" || pathname.startsWith("/contacts/");
+  const onAnalytics     = pathname.startsWith("/analytics");
   const currentInboxCat = onInbox ? (searchParams.get("category") ?? "all") : "all";
   const currentCategory = onContacts ? (searchParams.get("category") ?? "all") : "all";
 
-  const [inboxOpen,    setInboxOpen]    = useState(onInbox);
-  const [contactsOpen, setContactsOpen] = useState(onContacts);
+  // Single open accordion — only one section open at a time
+  type OpenSection = "inbox" | "contacts" | "analytics" | null;
+  const defaultOpen: OpenSection = onInbox ? "inbox" : onContacts ? "contacts" : onAnalytics ? "analytics" : null;
+  const [openSection, setOpenSection] = useState<OpenSection>(defaultOpen);
+
+  const inboxOpen     = openSection === "inbox";
+  const contactsOpen  = openSection === "contacts";
+  const analyticsOpen = openSection === "analytics";
+
+  const toggleSection = (section: OpenSection) =>
+    setOpenSection((prev) => (prev === section ? null : section));
+
   const [notifPermission, setNotifPermission] = useState<string>("default");
 
-  useEffect(() => { if (onInbox)    setInboxOpen(true);    }, [onInbox]);
-  useEffect(() => { if (onContacts) setContactsOpen(true); }, [onContacts]);
+  // Auto-open matching section when navigating to a page via URL
+  useEffect(() => { if (onInbox)     setOpenSection("inbox");     }, [onInbox]);
+  useEffect(() => { if (onContacts)  setOpenSection("contacts");  }, [onContacts]);
+  useEffect(() => { if (onAnalytics) setOpenSection("analytics"); }, [onAnalytics]);
   useEffect(() => { setNotifPermission(getNotificationPermission()); }, []);
 
   const { data: contacts = [] } = useQuery({
@@ -406,7 +426,7 @@ export function AppSidebar() {
                     <button
                       onClick={() => {
                         if (!onInbox) router.push("/inbox");
-                        setInboxOpen((o) => !o);
+                        toggleSection("inbox");
                       }}
                       className={`
                         relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-120 ease-out
@@ -458,7 +478,7 @@ export function AppSidebar() {
                     <button
                       onClick={() => {
                         if (!onContacts) router.push("/contacts");
-                        setContactsOpen((o) => !o);
+                        toggleSection("contacts");
                       }}
                       className={`
                         relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-120 ease-out
@@ -527,6 +547,82 @@ export function AppSidebar() {
               </div>
             )}
             <div className="space-y-0.5">
+              {/* Analytics accordion */}
+              {expanded ? (
+                <div>
+                  <button
+                    onClick={() => {
+                      if (!onAnalytics) router.push("/analytics/token-usage");
+                      toggleSection("analytics");
+                    }}
+                    className={`
+                      relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-120 ease-out
+                      ${onAnalytics
+                        ? "bg-[var(--sidebar-item-active)] text-[var(--text-primary)] font-medium shadow-[var(--shadow-xs)]"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-primary)]"
+                      }
+                    `}
+                  >
+                    <TrendingUp className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={onAnalytics ? 2 : 1.75} />
+                    <span className="text-[13px] leading-none flex-1 text-left">Analytics</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-[var(--text-tertiary)] transition-transform duration-200 ${
+                        analyticsOpen ? "" : "-rotate-90"
+                      }`}
+                    />
+                  </button>
+                  {analyticsOpen && (
+                    <div className="mt-1 ml-5 pl-3 border-l border-[var(--border-default)] space-y-1">
+                      {ANALYTICS_ITEMS.map((item) => {
+                        const isActiveSub = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.id}
+                            href={item.href}
+                            className={`
+                              flex items-center gap-2 pl-[20px] pr-3 py-[6px] rounded-md text-[13px] transition-all duration-120 ease-out
+                              ${isActiveSub
+                                ? "bg-[var(--sidebar-sub-active)] text-[var(--text-primary)] font-medium"
+                                : "text-[var(--text-secondary)] hover:bg-[var(--sidebar-sub-hover)] hover:text-[var(--text-primary)]"
+                              }
+                            `}
+                          >
+                            {item.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Tooltip.Root delayDuration={0}>
+                  <Tooltip.Trigger asChild>
+                    <Link
+                      href="/analytics/token-usage"
+                      className={`
+                        relative flex items-center justify-center p-2.5 rounded-lg transition-all duration-120 ease-out
+                        ${onAnalytics
+                          ? "bg-[var(--sidebar-item-active)] text-[var(--text-primary)] shadow-[var(--shadow-xs)]"
+                          : "text-[var(--text-secondary)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-primary)]"
+                        }
+                      `}
+                    >
+                      <TrendingUp className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={onAnalytics ? 2 : 1.75} />
+                    </Link>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      side="right"
+                      sideOffset={12}
+                      className="z-50 rounded-lg bg-[var(--text-primary)] px-2.5 py-1.5 text-[12px] font-medium text-[var(--bg-surface)] shadow-[var(--shadow-dropdown)] animate-in fade-in-0 zoom-in-95"
+                    >
+                      Analytics
+                      <Tooltip.Arrow className="fill-[var(--text-primary)]" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              )}
+
               {SECONDARY_NAV.map((item) => (
                 <NavItemButton key={item.id} item={item} isActive={isActive(item)} expanded={expanded} />
               ))}
