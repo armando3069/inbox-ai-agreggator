@@ -68,9 +68,10 @@ export function buildChannels(conversations: { platform: string }[]): Channel[] 
   }, {});
 
   const chatCount =
-    (countByPlatform["telegram"] ?? 0) +
-    (countByPlatform["whatsapp"] ?? 0) +
-    (countByPlatform["teams"]    ?? 0);
+    (countByPlatform["telegram"]  ?? 0) +
+    (countByPlatform["whatsapp"]  ?? 0) +
+    (countByPlatform["messenger"] ?? 0) +
+    (countByPlatform["teams"]     ?? 0);
 
   return [
     { id: "all",      name: "All",      count: conversations.length },

@@ -403,12 +403,13 @@ export class TelegramService {
     await updateConversationLastMessage(this.prisma, message);
 
     // 5. Broadcast to the owning user's WebSocket room
+    // newConversation must be emitted before newMessage so the frontend
+    // can add the conversation to state before incrementing its unread count.
     const userId = platformAccount.user_id;
-    this.chatGateway.emitNewMessage(userId, message);
-
     if (isNew) {
       this.chatGateway.emitNewConversation(userId, conversation);
     }
+    this.chatGateway.emitNewMessage(userId, message);
 
     // 6. Auto-reply if enabled for this user
     if (this.aiAssistantService.isAutoReplyEnabled(userId) && msg.text) {

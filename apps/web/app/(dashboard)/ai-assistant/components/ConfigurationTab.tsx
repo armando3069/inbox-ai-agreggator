@@ -203,7 +203,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
       const { reply } = await aiAssistantService.testReply(testInput.trim());
       setTestReplyText(reply);
     } catch {
-      setTestError("AI-ul nu este disponibil momentan. Verifică că Ollama rulează.");
+      setTestError("AI-ul nu este disponibil momentan. Verifică că ANTHROPIC_API_KEY este configurat în backend.");
     } finally {
       setTestLoading(false);
     }

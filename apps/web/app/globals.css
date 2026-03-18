@@ -195,22 +195,27 @@ body {
 
 /* ─ Tables ─ */
 .email-content table {
-  max-width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
   border-collapse: collapse;
-  table-layout: fixed;
-  overflow-x: auto;
-  display: block;
+  border: none !important;
 }
 .email-content td,
 .email-content th {
-  padding: 6px 10px;
-  border: 1px solid var(--border-warm);
   vertical-align: top;
   word-break: break-word;
+  border: none !important;
 }
 .email-content th {
-  background: var(--bg-surface-hover);
   font-weight: 600;
+}
+
+/* ─ Strip decorative borders/outlines from all email layout containers ─ */
+.email-content div,
+.email-content center,
+.email-content tr {
+  border: none !important;
+  outline: none !important;
 }
 
 /* ─ Links ─ */
