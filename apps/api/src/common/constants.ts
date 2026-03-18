@@ -18,7 +18,7 @@ export const TELEGRAM_API_BASE = 'https://api.telegram.org';
 
 // ── Claude (Anthropic) ────────────────────────────────────────────────────────
 export const CLAUDE_DEFAULTS = {
-  model: 'claude-3-5-haiku-20241022',
+  model: 'claude-haiku-4-5',
   maxTokens: 1024,
 } as const;
 
