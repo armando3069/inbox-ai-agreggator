@@ -63,25 +63,25 @@ export default function CostPage() {
       <div className="grid grid-cols-3 gap-4">
         <StatCard
           label="Total token cost"
-          value={isLoading ? "—" : `USD ${total.toFixed(4)}`}
-          sub="Simulated pricing"
+          value={isLoading ? "—" : `USD ${total.toFixed(6)}`}
+          sub="Claude 3.5 Haiku pricing"
         />
         <StatCard
-          label="Total web search cost"
-          value="USD 0.00"
-          sub="No web searches used"
+          label="Input token cost"
+          value="$0.80 / 1M"
+          sub="Per 1M input tokens"
         />
         <StatCard
-          label="Total code execution cost"
-          value="USD 0.00"
-          sub="No code execution used"
+          label="Output token cost"
+          value="$4.00 / 1M"
+          sub="Per 1M output tokens"
         />
       </div>
 
       {/* Chart */}
       <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-default)] p-6">
         <p className="text-[14px] font-semibold text-[var(--text-primary)] mb-1">Daily token cost</p>
-        <p className="text-[12px] text-[var(--text-tertiary)] mb-6">Simulated USD cost per day — last 30 days</p>
+        <p className="text-[12px] text-[var(--text-tertiary)] mb-6">Claude 3.5 Haiku — USD cost per day, last 30 days</p>
 
         {isLoading ? (
           <div className="h-64 flex items-center justify-center text-[var(--text-tertiary)] text-[13px]">
