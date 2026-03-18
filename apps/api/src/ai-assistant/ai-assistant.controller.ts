@@ -99,10 +99,11 @@ export class AiAssistantController {
   @Post('translate')
   @HttpCode(HttpStatus.OK)
   async translate(
+    @Request() req: AuthenticatedRequest,
     @Body() dto: TranslateDto,
   ): Promise<{ translatedText: string; detectedSourceLanguage: string; confidence: number }> {
     try {
-      return await this.aiAssistantService.translateText(dto);
+      return await this.aiAssistantService.translateText(dto, req.user.id);
     } catch (e) {
       this.logger.error('[AI] translate failed', e);
       throw new InternalServerErrorException('AI service unavailable');
@@ -124,7 +125,7 @@ export class AiAssistantController {
     if (!conv) throw new NotFoundException('Conversation not found');
 
     try {
-      const suggestions = await this.aiAssistantService.getSuggestedReplies(conversationId);
+      const suggestions = await this.aiAssistantService.getSuggestedReplies(conversationId, userId);
       return { suggestions };
     } catch (e) {
       this.logger.error(`[AI] suggested-replies failed for conversation ${conversationId}`, e);

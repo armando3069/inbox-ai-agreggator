@@ -68,7 +68,7 @@ export function EmailHtmlViewer({ html }: EmailHtmlViewerProps) {
   const isLong = html.length > 4000;
 
   return (
-    <div className="pt-5">
+    <div>
       <div
         className={[
           "email-content relative overflow-hidden transition-all duration-300 ease-out",
@@ -88,13 +88,15 @@ export function EmailHtmlViewer({ html }: EmailHtmlViewerProps) {
 
       {/* Expand / collapse toggle */}
       {isLong && (
-        <button
-          type="button"
-          onClick={() => setIsExpanded((p) => !p)}
-          className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] hover:text-[#111827] transition-colors duration-150"
-        >
-          <span>{isExpanded ? "▲ Restrânge" : "▼ Afișează tot email-ul"}</span>
-        </button>
+        <div className="px-6 pb-4">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((p) => !p)}
+            className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] hover:text-[#111827] transition-colors duration-150"
+          >
+            <span>{isExpanded ? "▲ Restrânge" : "▼ Afișează tot email-ul"}</span>
+          </button>
+        </div>
       )}
     </div>
   );

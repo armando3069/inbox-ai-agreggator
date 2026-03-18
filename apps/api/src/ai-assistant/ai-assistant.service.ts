@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Anthropic from '@anthropic-ai/sdk';
 import { PrismaService } from '../prisma/prisma.service';
 import { KnowledgeBaseService } from '../knowledge-base/knowledge-base.service';
-import { OLLAMA_DEFAULTS, SUGGESTIONS_CACHE_TTL_MS } from '../common/constants';
+import { CLAUDE_DEFAULTS, SUGGESTIONS_CACHE_TTL_MS } from '../common/constants';
 import { ResponseTone, UpdateConfigDto } from './dto/update-config.dto';
 import { TranslateDto } from './dto/translate.dto';
 
@@ -30,25 +31,18 @@ const DEFAULT_CONFIG: Omit<AiAssistantConfig, 'userId'> = {
   confidenceThreshold: 70,
 };
 
-// ── Cost constants (simulated pricing) ────────────────────────────────────────
-const COST_PER_1K_IN  = 0.0001; // USD per 1K input  tokens
-const COST_PER_1K_OUT = 0.0002; // USD per 1K output tokens
+// ── Cost constants (Claude 3.5 Haiku pricing) ─────────────────────────────────
+const COST_PER_1K_IN  = 0.0008; // USD per 1K input  tokens
+const COST_PER_1K_OUT = 0.004;  // USD per 1K output tokens
 
-// ── Ollama shapes ─────────────────────────────────────────────────────────────
+// ── Message shape ─────────────────────────────────────────────────────────────
 
-interface OllamaMessage {
+interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
-interface OllamaResponse {
-  message?: { content?: string };
-  response?: string;
-  prompt_eval_count?: number; // tokens consumed by the prompt
-  eval_count?: number;        // tokens generated in the response
-}
-
-interface OllamaResult {
+interface ClaudeResult {
   text: string;
   tokensIn: number;
   tokensOut: number;
@@ -60,14 +54,8 @@ interface OllamaResult {
 export class AiAssistantService {
   private readonly logger = new Logger(AiAssistantService.name);
 
-  /** Per-user configuration. Resets on restart (in-memory only). */
   private readonly configs = new Map<number, AiAssistantConfig>();
 
-  /**
-   * Suggested-replies cache keyed by `"${conversationId}:${lastMessageId}"`.
-   * A new message always produces a new key, so stale entries are naturally
-   * bypassed without any explicit invalidation.
-   */
   private readonly suggestionsCache = new Map<
     string,
     { suggestions: string[]; expiresAt: number }
@@ -79,6 +67,18 @@ export class AiAssistantService {
     private readonly knowledgeBase: KnowledgeBaseService,
   ) {}
 
+  // ── Claude client ──────────────────────────────────────────────────────────
+
+  private getClient(): Anthropic {
+    return new Anthropic({
+      apiKey: this.config.get<string>('ANTHROPIC_API_KEY') ?? '',
+    });
+  }
+
+  private getModelName(): string {
+    return this.config.get<string>('CLAUDE_MODEL') ?? CLAUDE_DEFAULTS.model;
+  }
+
   // ── Config management ──────────────────────────────────────────────────────
 
   getConfig(userId: number): AiAssistantConfig {
@@ -89,7 +89,7 @@ export class AiAssistantService {
     const current = this.getConfig(userId);
     const updated: AiAssistantConfig = {
       ...current,
-      ...(dto.responseTone       !== undefined && { responseTone:       dto.responseTone }),
+      ...(dto.responseTone        !== undefined && { responseTone:        dto.responseTone }),
       ...(dto.confidenceThreshold !== undefined && { confidenceThreshold: dto.confidenceThreshold }),
       ...(dto.autoReplyEnabled    !== undefined && { autoReplyEnabled:    dto.autoReplyEnabled }),
     };
@@ -101,34 +101,34 @@ export class AiAssistantService {
     return updated;
   }
 
-  // ── Legacy global accessors (kept for backward-compat with platform services) ─
-
-  /** True if auto-reply is enabled for the given user. */
   isAutoReplyEnabled(userId: number): boolean {
     return this.getConfig(userId).autoReplyEnabled;
   }
 
-  // ── Ollama HTTP helper ─────────────────────────────────────────────────────
+  // ── Claude chat helper ─────────────────────────────────────────────────────
 
-  private async callOllama(messages: OllamaMessage[]): Promise<OllamaResult> {
-    const ollamaUrl = this.config.get<string>('OLLAMA_URL') ?? OLLAMA_DEFAULTS.url;
-    const model = this.config.get<string>('OLLAMA_MODEL') ?? OLLAMA_DEFAULTS.model;
+  private async callClaude(messages: ChatMessage[]): Promise<ClaudeResult> {
+    const client    = this.getClient();
+    const model     = this.getModelName();
+    const maxTokens = CLAUDE_DEFAULTS.maxTokens;
 
-    const res = await fetch(`${ollamaUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages, stream: false }),
+    const systemMsg = messages.find((m) => m.role === 'system');
+    const chatMsgs  = messages.filter((m) => m.role !== 'system');
+
+    const response = await client.messages.create({
+      model,
+      max_tokens: maxTokens,
+      ...(systemMsg ? { system: systemMsg.content } : {}),
+      messages: chatMsgs.map((m) => ({
+        role:    m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
     });
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Ollama error ${res.status}: ${body}`);
-    }
+    const text      = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
+    const tokensIn  = response.usage.input_tokens;
+    const tokensOut = response.usage.output_tokens;
 
-    const data = (await res.json()) as OllamaResponse;
-    const text = (data.message?.content ?? data.response ?? '').trim();
-    const tokensIn  = data.prompt_eval_count ?? 0;
-    const tokensOut = data.eval_count ?? 0;
     return { text, tokensIn, tokensOut };
   }
 
@@ -140,7 +140,7 @@ export class AiAssistantService {
     tokensIn: number;
     tokensOut: number;
   }): Promise<void> {
-    const model = this.config.get<string>('OLLAMA_MODEL') ?? OLLAMA_DEFAULTS.model;
+    const model   = this.getModelName();
     const costUsd =
       (opts.tokensIn  / 1000) * COST_PER_1K_IN +
       (opts.tokensOut / 1000) * COST_PER_1K_OUT;
@@ -160,51 +160,13 @@ export class AiAssistantService {
     }
   }
 
-  // ── Confidence estimation ──────────────────────────────────────────────────
+  // ── Suggested replies ─────────────────────────────────────────────────────
 
-  /**
-   * Asks Ollama to rate (0–100) how well the given answer is supported by the
-   * provided context chunks. Falls back to 50 on any error.
-   */
-  private async estimateConfidence(
-    question: string,
-    answer: string,
-    contextChunks: string[],
-  ): Promise<number> {
-    const contextText = contextChunks.slice(0, 3).join('\n\n---\n\n');
-    const prompt =
-      `Context:\n${contextText}\n\n` +
-      `Question: "${question}"\n\n` +
-      `Answer: "${answer}"\n\n` +
-      'Rate from 0 to 100 how confident you are that this answer is directly supported ' +
-      'by the context above. Reply ONLY with a single integer number between 0 and 100.';
-
-    try {
-      const { text } = await this.callOllama([{ role: 'user', content: prompt }]);
-      const match = text.match(/\d+/);
-      if (match) {
-        const num = parseInt(match[0], 10);
-        if (num >= 0 && num <= 100) return num;
-      }
-    } catch (e) {
-      this.logger.warn('[AI] Confidence estimation failed', e);
-    }
-    return 50; // neutral fallback
-  }
-
-  // ── Public: suggested replies ─────────────────────────────────────────────
-
-  /**
-   * Returns 4 short suggested replies for the given conversation.
-   * Results are cached for 30 s per conversation, and invalidated automatically
-   * when the latest message changes.
-   */
-  async getSuggestedReplies(conversationId: number): Promise<string[]> {
+  async getSuggestedReplies(conversationId: number, userId?: number): Promise<string[]> {
     const now = Date.now();
 
-    // Fetch last 6 messages (desc = newest first)
     const rows = await this.prisma.messages.findMany({
-      where: { conversation_id: conversationId },
+      where:   { conversation_id: conversationId },
       orderBy: { timestamp: 'desc' },
       take: 6,
     });
@@ -212,38 +174,30 @@ export class AiAssistantService {
     if (rows.length === 0) return this.defaultSuggestions();
 
     const latestId = rows[0].id;
-
-    // Return cached result if still fresh (key encodes lastMessageId, so a new
-    // message automatically bypasses the old entry without any explicit eviction)
     const cacheKey = `${conversationId}:${latestId}`;
     const hit = this.suggestionsCache.get(cacheKey);
-    if (hit && hit.expiresAt > now) {
-      return hit.suggestions;
-    }
+    if (hit && hit.expiresAt > now) return hit.suggestions;
 
-    // Build transcript (chronological order)
     const lines = [...rows]
       .reverse()
       .filter((m) => m.text)
       .map((m) => `${m.sender_type === 'client' ? 'Customer' : 'Agent'}: ${m.text}`);
 
-    const transcript = lines.join('\n');
-
     const systemPrompt =
       'You are a customer support assistant. Based on the conversation context, generate 4 short professional reply suggestions the agent could send next. Replies must be concise, natural, and in Romanian.';
 
     const userPrompt =
-      `Transcript:\n${transcript}\n\n` +
+      `Transcript:\n${lines.join('\n')}\n\n` +
       'Return ONLY valid JSON with no extra text:\n' +
       '{"suggestions": ["text", "text", "text", "text"]}';
 
     try {
-      const { text: raw, tokensIn, tokensOut } = await this.callOllama([
+      const { text: raw, tokensIn, tokensOut } = await this.callClaude([
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: 'user',   content: userPrompt },
       ]);
 
-      void this.logUsage({ conversationId, tokensIn, tokensOut });
+      void this.logUsage({ userId, conversationId, tokensIn, tokensOut });
 
       const jsonMatch = raw.match(/\{[\s\S]*"suggestions"[\s\S]*\}/);
       if (jsonMatch) {
@@ -254,20 +208,20 @@ export class AiAssistantService {
             suggestions,
             expiresAt: now + SUGGESTIONS_CACHE_TTL_MS,
           });
-          this.logger.log(`[AI] suggested-replies generated for conversation=${conversationId}`);
+          this.logger.log(`[AI] suggested-replies for conversation=${conversationId}`);
           return suggestions;
         }
       }
     } catch (e) {
-      this.logger.warn('[AI] getSuggestedReplies Ollama call failed', e);
+      this.logger.warn('[AI] getSuggestedReplies failed', e);
     }
 
     return this.defaultSuggestions();
   }
 
-  // ── Public: text translation ──────────────────────────────────────────────
+  // ── Translation ───────────────────────────────────────────────────────────
 
-  async translateText(dto: TranslateDto): Promise<{
+  async translateText(dto: TranslateDto, userId?: number): Promise<{
     translatedText: string;
     detectedSourceLanguage: string;
     confidence: number;
@@ -290,12 +244,12 @@ export class AiAssistantService {
     const user = `Translate to ${dto.targetLanguage}:\n${JSON.stringify(text)}`;
 
     try {
-      const { text: raw, tokensIn, tokensOut } = await this.callOllama([
+      const { text: raw, tokensIn, tokensOut } = await this.callClaude([
         { role: 'system', content: system },
-        { role: 'user', content: user },
+        { role: 'user',   content: user },
       ]);
 
-      void this.logUsage({ tokensIn, tokensOut });
+      void this.logUsage({ userId, tokensIn, tokensOut });
 
       const match = raw.match(/\{[\s\S]*\}/);
       if (match) {
@@ -328,27 +282,20 @@ export class AiAssistantService {
     ];
   }
 
-  // ── Public: simple one-shot reply (test endpoint) ─────────────────────────
+  // ── Simple one-shot reply (test endpoint) ─────────────────────────────────
 
   async generateSimpleReply(text: string, userId?: number): Promise<string> {
     const tone = userId !== undefined ? this.getConfig(userId).responseTone : 'professional';
-    const { text: reply, tokensIn, tokensOut } = await this.callOllama([
+    const { text: reply, tokensIn, tokensOut } = await this.callClaude([
       { role: 'system', content: TONE_PROMPTS[tone] },
-      { role: 'user', content: text },
+      { role: 'user',   content: text },
     ]);
     void this.logUsage({ userId, tokensIn, tokensOut });
     return reply;
   }
 
-  // ── Public: reply with conversation history (+ optional KB RAG) ──────────
+  // ── Reply with conversation history (+ optional KB RAG via Gemini PDF) ───
 
-  /**
-   * Generates a reply and an estimated confidence score (0–100).
-   *
-   * Priority:
-   *  1. KB RAG — if the user has indexed PDFs, use RAG + confidence estimation
-   *  2. Plain Ollama chat — fallback with conversation history; confidence = 80
-   */
   async generateReplyFromMessage(input: {
     conversationId: number;
     latestUserMessage: string;
@@ -357,61 +304,53 @@ export class AiAssistantService {
     const { userId, latestUserMessage, conversationId } = input;
     const tone = userId !== undefined ? this.getConfig(userId).responseTone : 'professional';
 
-    // ── Path 1: KB RAG ────────────────────────────────────────────────────────
+    // ── Path 1: KB — Gemini reads PDFs, Claude composes the final reply ───────
     if (userId !== undefined) {
       const files = this.knowledgeBase.getFilesForUser(userId);
       if (files.length > 0) {
         try {
-          const { answer, usedChunks } = await this.knowledgeBase.answerQuestionForUser(
+          const { answer } = await this.knowledgeBase.answerQuestionForUser(
             userId,
             latestUserMessage,
           );
-          const confidence = await this.estimateConfidence(
-            latestUserMessage,
-            answer,
-            usedChunks,
-          );
           this.logger.log(
-            `[AI] RAG | user=${userId} conversation=${conversationId} ` +
-            `confidence=${confidence}% tone=${tone}`,
+            `[AI] PDF-KB | user=${userId} conversation=${conversationId} tone=${tone}`,
           );
-          return { reply: answer, confidence };
+          return { reply: answer, confidence: 95 };
         } catch (e) {
-          this.logger.warn('[AI] KB RAG failed, falling back to plain chat', e);
+          this.logger.warn('[AI] KB PDF answer failed, falling back to plain chat', e);
         }
       }
     }
 
-    // ── Path 2: Plain chat with history ───────────────────────────────────────
+    // ── Path 2: Plain chat with history via Claude ────────────────────────────
     const history = await this.prisma.messages.findMany({
-      where: { conversation_id: conversationId },
+      where:   { conversation_id: conversationId },
       orderBy: { timestamp: 'asc' },
       take: 10,
     });
 
-    const messages: OllamaMessage[] = [
+    const messages: ChatMessage[] = [
       { role: 'system', content: TONE_PROMPTS[tone] },
     ];
 
     for (const msg of history) {
       if (!msg.text) continue;
       messages.push({
-        role: msg.sender_type === 'client' ? 'user' : 'assistant',
+        role:    msg.sender_type === 'client' ? 'user' : 'assistant',
         content: msg.text,
       });
     }
 
-    const lastMsg = history[history.length - 1];
-    const alreadyAtEnd =
-      lastMsg?.sender_type === 'client' && lastMsg?.text === latestUserMessage;
+    const lastMsg      = history[history.length - 1];
+    const alreadyAtEnd = lastMsg?.sender_type === 'client' && lastMsg?.text === latestUserMessage;
 
     if (!alreadyAtEnd) {
       messages.push({ role: 'user', content: latestUserMessage });
     }
 
-    const { text: reply, tokensIn, tokensOut } = await this.callOllama(messages);
+    const { text: reply, tokensIn, tokensOut } = await this.callClaude(messages);
     void this.logUsage({ userId, conversationId, tokensIn, tokensOut });
-    // No document context → assume reasonable confidence
     return { reply, confidence: 80 };
   }
 }

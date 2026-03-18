@@ -61,15 +61,17 @@ export function EmailMessageCard({ message, index = 0 }: EmailMessageCardProps) 
           SSR and injects the sanitised markup after hydration via useEffect.
           We always pass it when htmlBody is present so the client can render it,
           even if SSR shows nothing initially.                                  */}
-      <div className="px-6 pb-6">
-        {htmlBody ? (
-          <EmailHtmlViewer html={htmlBody} />
-        ) : plainText.trim() ? (
-          <EmailPlainTextView text={plainText} />
-        ) : (
-          <p className="pt-5 text-[13px] text-[#9CA3AF] italic">(empty message)</p>
-        )}
-      </div>
+      {htmlBody ? (
+        <EmailHtmlViewer html={htmlBody} />
+      ) : (
+        <div className="px-6 pb-6">
+          {plainText.trim() ? (
+            <EmailPlainTextView text={plainText} />
+          ) : (
+            <p className="pt-5 text-[13px] text-[#9CA3AF] italic">(empty message)</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
