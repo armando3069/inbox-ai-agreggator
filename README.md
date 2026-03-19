@@ -4,7 +4,7 @@
 
 # AI Inbox
 
-**One inbox for all your customer conversations — powered by Claude AI**
+**One inbox for all your customer conversations**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
