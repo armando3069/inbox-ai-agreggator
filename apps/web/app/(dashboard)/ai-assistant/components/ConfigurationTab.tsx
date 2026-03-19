@@ -13,56 +13,20 @@ import {
 import { aiAssistantService } from "@/services/ai-assistant/ai-assistant.service";
 import type { ResponseTone } from "@/services/ai-assistant/ai-assistant.types";
 import type { UseAiConfigReturn } from "@/app/(dashboard)/ai-assistant/hooks/useAiConfig";
+import { Toggle } from "@/components/ui/Toggle";
+import { ConfidenceSlider } from "@/app/(dashboard)/ai-assistant/components/ConfidenceSlider";
+import {
+  TONE_OPTIONS,
+  CARD,
+  ICON_BOX,
+  ICON,
+  CARD_TITLE,
+  CARD_DESC,
+  PRIMARY_BTN,
+  TEXTAREA,
+} from "@/app/(dashboard)/ai-assistant/utils/ai-assistant.utils";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const TONE_OPTIONS: { value: ResponseTone; label: string; description: string }[] = [
-  { value: "professional", label: "Professional",  description: "Clear, concise, and formal" },
-  { value: "friendly",     label: "Friendly",      description: "Warm and helpful" },
-  { value: "casual",       label: "Casual",        description: "Relaxed and conversational" },
-  { value: "strict",       label: "Strict",        description: "Direct and minimal" },
-];
-
-// ── Shared styles ─────────────────────────────────────────────────────────────
-
-const CARD = "rounded-2xl border border-[var(--border-warm)] bg-[var(--bg-surface)] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]";
-const ICON_BOX = "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F3F4F6]";
-const ICON = "h-[18px] w-[18px] text-[var(--text-secondary)]";
-const CARD_TITLE = "text-[14px] font-semibold text-[var(--text-primary)] leading-tight";
-const CARD_DESC = "mt-1 text-[13px] text-[var(--text-tertiary)] leading-relaxed";
-const PRIMARY_BTN = "inline-flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--accent-primary)] px-4 py-2 text-[13px] font-medium text-white hover:bg-[var(--accent-primary-hover)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 transition-all duration-150 ease-out shadow-[var(--shadow-xs)]";
-const TEXTAREA = "w-full rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] px-4 py-3 text-[13px] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--text-tertiary)] resize-none transition-all duration-150 ease-out leading-relaxed";
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function Toggle({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-[22px] w-[40px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-out focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${
-        checked ? "bg-[var(--accent-primary)]" : "bg-[var(--border-default)]"
-      }`}
-    >
-      <span
-        className={`inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out ${
-          checked ? "translate-x-[18px]" : "translate-x-0"
-        }`}
-      />
-    </button>
-  );
-}
+// ── ToneSelector (local, not reused elsewhere) ────────────────────────────────
 
 function ToneSelector({
   value,
@@ -123,48 +87,6 @@ function ToneSelector({
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function ConfidenceSlider({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[13px] text-[var(--text-secondary)]">Confidence threshold</span>
-        <span className="rounded-full bg-[var(--bg-surface-hover)] border border-[var(--border-default)] px-2.5 py-0.5 text-[12px] font-semibold text-[var(--text-primary)] tabular-nums">
-          {value}%
-        </span>
-      </div>
-
-      <div className="relative">
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={5}
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(parseInt(e.target.value, 10))}
-          className="slider-premium h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[var(--border-default)] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{
-            background: `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${value}%, var(--border-default) ${value}%, var(--border-default) 100%)`,
-          }}
-        />
-      </div>
-
-      <div className="flex justify-between text-[11px] text-[var(--text-tertiary)]">
-        <span>0% — always respond</span>
-        <span>100% — very strict</span>
-      </div>
     </div>
   );
 }
