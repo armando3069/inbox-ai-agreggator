@@ -19,7 +19,7 @@
 
 ---
 
-![AI Inbox Screenshot](https://placehold.co/1280x720/0f172a/ffffff?text=AI+Inbox+Dashboard)
+<img src="apps/web/public/apps.png" alt="AI Inbox Logo" width="100%" height="100%" />
 
 </div>
 
