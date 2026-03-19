@@ -71,7 +71,7 @@ export function EmailHtmlViewer({ html }: EmailHtmlViewerProps) {
     <div>
       <div
         className={[
-          "email-content relative overflow-hidden transition-all duration-300 ease-out",
+          "email-content relative overflow-hidden transition-all duration-300 ease-out px-6 pt-4 pb-6",
           isLong && !isExpanded ? "max-h-[500px]" : "",
         ]
           .filter(Boolean)
