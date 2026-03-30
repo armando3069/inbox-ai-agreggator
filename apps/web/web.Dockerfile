@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -9,13 +9,12 @@ RUN npm ci
 
 FROM deps AS build
 COPY . .
-RUN corepack enable
 WORKDIR /app/apps/web
 RUN rm -rf node_modules && npm ci
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
