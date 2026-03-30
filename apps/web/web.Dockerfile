@@ -11,8 +11,7 @@ FROM deps AS build
 COPY . .
 RUN corepack enable
 WORKDIR /app/apps/web
-RUN npm install
-RUN npm install lightningcss --force
+RUN rm -rf node_modules && npm ci
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
