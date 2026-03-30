@@ -9,6 +9,7 @@ RUN npm ci
 
 FROM deps AS build
 COPY . .
+RUN corepack enable
 WORKDIR /app/apps/web
 RUN npm run build
 
@@ -20,7 +21,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/web/.next ./apps/web/.next
 COPY --from=build /app/apps/web/public ./apps/web/public
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
-COPY --from=build /app/apps/web/next.config.* ./apps/web/ 2>/dev/null || true
+COPY --from=build /app/apps/web/next.config.* ./apps/web/
 
 WORKDIR /app/apps/web
 EXPOSE 3000
