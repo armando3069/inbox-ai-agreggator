@@ -12,6 +12,7 @@ COPY . .
 RUN corepack enable
 WORKDIR /app/apps/web
 RUN npm install
+RUN npm install lightningcss --force
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
