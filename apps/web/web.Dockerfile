@@ -11,6 +11,8 @@ FROM deps AS build
 COPY . .
 RUN corepack enable
 WORKDIR /app/apps/web
+RUN npm install
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -22,6 +24,7 @@ COPY --from=build /app/apps/web/.next ./apps/web/.next
 COPY --from=build /app/apps/web/public ./apps/web/public
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
 COPY --from=build /app/apps/web/next.config.* ./apps/web/
+COPY --from=build /app/apps/web/node_modules ./apps/web/node_modules
 
 WORKDIR /app/apps/web
 EXPOSE 3000
