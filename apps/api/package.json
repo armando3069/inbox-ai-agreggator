@@ -48,6 +48,7 @@
     "passport-microsoft": "^2.1.0",
     "pdf-parse": "^1.1.4",
     "pg": "^8.18.0",
+    "prisma": "^7.4.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3"
@@ -77,7 +78,6 @@
     "globals": "^16.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
-    "prisma": "^7.4.1",
     "socket.io-client": "^4.8.3",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
