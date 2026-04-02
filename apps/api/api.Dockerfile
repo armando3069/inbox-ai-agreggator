@@ -20,6 +20,10 @@ COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/prisma ./prisma
 COPY --from=build /app/apps/api/prisma.config.ts ./prisma.config.ts
 
+# important: copiem si clientul generat prisma
+COPY --from=build /app/apps/api/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/apps/api/node_modules/@prisma ./node_modules/@prisma
+
 EXPOSE 3001
 
 CMD ["node", "dist/src/main.js"]
