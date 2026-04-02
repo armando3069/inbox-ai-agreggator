@@ -1,12 +1,13 @@
 import { app, BrowserWindow, nativeImage, ipcMain, Notification } from 'electron';
 import path from 'path';
 
-const isDev = process.env.NODE_ENV !== 'production';
-app.setName('Zottis');
+const isDev = !app.isPackaged;
+
+app.setName('AI-Inbox');
 
 const WEB_URL = isDev
-  ? 'http://localhost:3000'
-  : process.env.APP_WEB_URL ?? 'http://localhost:3000';
+    ? 'http://localhost:3000'
+    : process.env.APP_WEB_URL ?? 'https://ai-inbox.pro';
 
 // assets/ sits next to both src/ (dev) and dist/ (prod) — same relative path works for both
 const ICON_FILE =
