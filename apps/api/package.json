@@ -19,7 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "migrate:deploy": "prisma migrate deploy --config=./prisma.config.ts",
+    "migrate:deploy": "node ./node_modules/prisma/build/index.js migrate deploy --config=./prisma.config.ts",
     "prisma:generate": "prisma generate --config=./prisma.config.ts"
   },
   "dependencies": {
