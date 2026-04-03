@@ -27,7 +27,7 @@ export function Navbar() {
                 alt="Picture of the author"
             />
           <span className="text-[15px] font-semibold tracking-tight text-gray-900">
-            AI Inbox
+            AI Inbox Stage
           </span>
         </Link>
 
