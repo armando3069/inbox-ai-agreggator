@@ -96,7 +96,7 @@ export class FacebookGraphClient {
       .map((page) => ({
         pageId: page.id!,
         pageName: page.name!,
-        pageAccessToken: page.access_token ?? '',
+        pageAccessToken: page.access_token ?? '' ,
         category: page.category ?? null,
       }));
   }
