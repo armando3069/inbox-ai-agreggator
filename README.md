@@ -58,7 +58,7 @@
 - Guided step-by-step setup wizard for every platform
 - Telegram: long-polling (dev) + webhook (production)
 - WhatsApp Business Cloud API with webhook instructions & one-click copy
-- Facebook Messenger Graph API with webhook configuration guide
+- Facebook Messenger OAuth page connection flow with webhook configuration guide
 - Email: Gmail / Outlook / Custom IMAP+SMTP with advanced server overrides
 
 ### 🎨 Design System
@@ -164,6 +164,20 @@ npx prisma db seed
 # Regenerate the Prisma client after schema changes
 npx prisma generate
 ```
+
+### Facebook Messenger setup
+
+1. Create a Meta app with the Messenger product enabled.
+2. Add `http://localhost:3001/integrations/facebook/callback` as a valid OAuth redirect URI for local development.
+3. Request these permissions for your app:
+   - `pages_show_list`
+   - `pages_read_engagement`
+   - `pages_manage_metadata`
+   - `pages_messaging`
+4. Configure the Messenger webhook callback URL and verify token shown in the dashboard's Connect Platforms screen.
+5. Set `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_REDIRECT_URI`, `FACEBOOK_GRAPH_VERSION`, and `TOKENS_ENCRYPTION_KEY` in `apps/api/.env`.
+
+Generate `TOKENS_ENCRYPTION_KEY` as a 32-byte secret encoded in base64 or 64-char hex. The backend uses it to encrypt Facebook page access tokens at rest.
 
 ### 5. Start development servers
 
