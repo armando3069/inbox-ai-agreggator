@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TelegramModule } from './telegram/telegram.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { MessengerModule } from './messenger/messenger.module';
+import { FacebookModule } from './integrations/facebook/facebook.module';
 import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ChatModule } from './chat/chat.module';
@@ -20,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     TelegramModule,
     WhatsappModule,
     MessengerModule,
+    FacebookModule,
     EmailModule,
     ChatModule,
     AiAssistantModule,
