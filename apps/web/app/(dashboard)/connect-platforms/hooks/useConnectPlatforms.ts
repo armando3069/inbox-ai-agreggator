@@ -1,15 +1,20 @@
 "use client";
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getToken } from "@/services/auth/auth-service";
 import { platformsService } from "@/services/platforms/platforms.service";
-import type { PlatformAccount } from "@/services/platforms/platforms.types";
+import type {
+  FacebookConnectionStatus,
+  FacebookPendingPage,
+  PlatformAccount,
+} from "@/services/platforms/platforms.types";
 import type { EmailProvider, PlatformConfig } from "../utils/platforms.constants";
 
 export function useConnectPlatforms(isManaging: boolean) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLoading: isAuthLoading } = useAuth();
 
   // ── Platform state ─────────────────────────────────────────────────────────
@@ -19,6 +24,7 @@ export function useConnectPlatforms(isManaging: boolean) {
 
   // ── Connection state ───────────────────────────────────────────────────────
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [toast, setToast]               = useState<string | null>(null);
 
@@ -29,9 +35,11 @@ export function useConnectPlatforms(isManaging: boolean) {
   const [waAccessToken, setWaAccessToken]     = useState("");
   const [waPhoneNumberId, setWaPhoneNumberId] = useState("");
 
-  // ── Messenger fields ───────────────────────────────────────────────────────
-  const [msPageId, setMsPageId]                   = useState("");
-  const [msPageAccessToken, setMsPageAccessToken] = useState("");
+  // ── Facebook Messenger state ──────────────────────────────────────────────
+  const [isFacebookStatusLoading, setIsFacebookStatusLoading] = useState(true);
+  const [facebookConnection, setFacebookConnection] = useState<FacebookConnectionStatus | null>(null);
+  const [facebookPendingPages, setFacebookPendingPages] = useState<FacebookPendingPage[]>([]);
+  const [facebookSessionId, setFacebookSessionId] = useState<string | null>(null);
 
   // ── Email fields ───────────────────────────────────────────────────────────
   const [emEmail, setEmEmail]               = useState("");
@@ -82,8 +90,6 @@ export function useConnectPlatforms(isManaging: boolean) {
     setTgBotToken("");
     setWaAccessToken("");
     setWaPhoneNumberId("");
-    setMsPageId("");
-    setMsPageAccessToken("");
     setEmEmail("");
     setEmPassword("");
     setEmProvider("gmail");
@@ -107,10 +113,14 @@ export function useConnectPlatforms(isManaging: boolean) {
     }
   };
 
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 2000);
+  };
+
   // ── Card click ─────────────────────────────────────────────────────────────
   const handleCardClick = (platform: PlatformConfig) => {
     if (platform.status !== "available") return;
-    if (connectedIds.has(platform.id)) return;
     setSelectedId(platform.id);
     setConnectError(null);
     resetFormFields();
@@ -139,20 +149,6 @@ export function useConnectPlatforms(isManaging: boolean) {
     try {
       await platformsService.connectWhatsapp(waAccessToken.trim(), waPhoneNumberId.trim());
       onSuccess("whatsapp", "WhatsApp conectat cu succes.");
-    } catch (err) {
-      setConnectError(err instanceof Error ? err.message : "A apărut o eroare.");
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const handleMessengerSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setConnectError(null);
-    setIsConnecting(true);
-    try {
-      await platformsService.connectMessenger(msPageId.trim(), msPageAccessToken.trim());
-      onSuccess("messenger", "Messenger conectat cu succes.");
     } catch (err) {
       setConnectError(err instanceof Error ? err.message : "A apărut o eroare.");
     } finally {
@@ -197,6 +193,146 @@ export function useConnectPlatforms(isManaging: boolean) {
     }
   };
 
+  const refreshFacebookStatus = async () => {
+    setIsFacebookStatusLoading(true);
+    try {
+      const status = await platformsService.getFacebookStatus();
+      setFacebookConnection(status.connected ? status : null);
+      setConnectedIds((prev) => {
+        const next = new Set(prev);
+        if (status.connected) next.add("messenger");
+        else next.delete("messenger");
+        return next;
+      });
+    } catch {
+      setFacebookConnection(null);
+    } finally {
+      setIsFacebookStatusLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (!getToken()) return;
+    void refreshFacebookStatus();
+  }, [isAuthLoading]);
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (!getToken()) return;
+
+    const facebookMode = searchParams.get("facebook");
+    const sessionId = searchParams.get("sessionId");
+    const reason = searchParams.get("reason");
+    const pageName = searchParams.get("pageName");
+
+    if (!facebookMode) return;
+
+    setSelectedId("messenger");
+
+    const clearFacebookParams = () => {
+      router.replace(isManaging ? "/connect-platforms?manage=1" : "/connect-platforms");
+    };
+
+    if (facebookMode === "connected") {
+      setFacebookPendingPages([]);
+      setFacebookSessionId(null);
+      setConnectError(null);
+      showToast(
+        pageName
+          ? `${pageName} a fost conectată cu succes.`
+          : "Messenger conectat cu succes.",
+      );
+      void refreshFacebookStatus().finally(clearFacebookParams);
+      return;
+    }
+
+    if (facebookMode === "select_page" && sessionId) {
+      setConnectError(null);
+      setIsFacebookStatusLoading(true);
+      platformsService
+        .getFacebookPendingPages(sessionId)
+        .then(({ pages }) => {
+          setFacebookPendingPages(pages);
+          setFacebookSessionId(sessionId);
+        })
+        .catch((err) => {
+          setFacebookPendingPages([]);
+          setFacebookSessionId(null);
+          setConnectError(err instanceof Error ? err.message : "Nu am putut încărca paginile Facebook.");
+        })
+        .finally(() => {
+          setIsFacebookStatusLoading(false);
+          clearFacebookParams();
+        });
+      return;
+    }
+
+    if (facebookMode === "error") {
+      setFacebookPendingPages([]);
+      setFacebookSessionId(null);
+      setConnectError(mapFacebookError(reason));
+      clearFacebookParams();
+    }
+  }, [isAuthLoading, isManaging, router, searchParams]);
+
+  const handleFacebookConnect = async () => {
+    setConnectError(null);
+    setIsConnecting(true);
+    try {
+      const { url } = await platformsService.getFacebookConnectUrl();
+      window.location.href = url;
+    } catch (err) {
+      setConnectError(err instanceof Error ? err.message : "Nu am putut porni conectarea Facebook.");
+      setIsConnecting(false);
+    }
+  };
+
+  const handleFacebookPageSelect = async (pageId: string) => {
+    if (!facebookSessionId) {
+      setConnectError("Sesiunea de selecție Facebook a expirat. Reîncearcă.");
+      return;
+    }
+
+    setConnectError(null);
+    setIsConnecting(true);
+    try {
+      await platformsService.selectFacebookPage(facebookSessionId, pageId);
+      setFacebookPendingPages([]);
+      setFacebookSessionId(null);
+      await refreshFacebookStatus();
+      setConnectedIds((prev) => new Set(prev).add("messenger"));
+      setSelectedId("messenger");
+      showToast("Messenger conectat cu succes.");
+    } catch (err) {
+      setConnectError(err instanceof Error ? err.message : "Nu am putut conecta pagina selectată.");
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleFacebookDisconnect = async () => {
+    setConnectError(null);
+    setIsDisconnecting(true);
+    try {
+      await platformsService.disconnectFacebook();
+      setFacebookConnection(null);
+      setFacebookPendingPages([]);
+      setFacebookSessionId(null);
+      setConnectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete("messenger");
+        return next;
+      });
+      setSelectedId("messenger");
+      showToast("Facebook Messenger a fost deconectat.");
+    } catch (err) {
+      setConnectError(err instanceof Error ? err.message : "Nu am putut deconecta pagina Facebook.");
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
   return {
     // loading
     isAuthLoading,
@@ -207,6 +343,7 @@ export function useConnectPlatforms(isManaging: boolean) {
     handleCardClick,
     // connection status
     isConnecting,
+    isDisconnecting,
     connectError,
     toast,
     // telegram
@@ -217,9 +354,12 @@ export function useConnectPlatforms(isManaging: boolean) {
     waPhoneNumberId, setWaPhoneNumberId,
     handleWhatsappSubmit,
     // messenger
-    msPageId, setMsPageId,
-    msPageAccessToken, setMsPageAccessToken,
-    handleMessengerSubmit,
+    isFacebookStatusLoading,
+    facebookConnection,
+    facebookPendingPages,
+    handleFacebookConnect,
+    handleFacebookPageSelect,
+    handleFacebookDisconnect,
     // email
     emEmail, setEmEmail,
     emPassword, setEmPassword,
@@ -233,4 +373,19 @@ export function useConnectPlatforms(isManaging: boolean) {
     emSmtpSecure, setEmSmtpSecure,
     handleEmailSubmit,
   };
+}
+
+function mapFacebookError(reason: string | null): string {
+  switch (reason) {
+    case "permissions_denied":
+      return "Permisiunile Facebook au fost refuzate.";
+    case "no_pages_found":
+      return "Contul Facebook autorizat nu administrează nicio pagină disponibilă.";
+    case "page_token_missing":
+      return "Meta nu a returnat token-ul pentru pagina selectată.";
+    case "missing_code":
+      return "Callback-ul Facebook nu conține codul de autorizare.";
+    default:
+      return reason ?? "A apărut o eroare în timpul conectării Facebook.";
+  }
 }
