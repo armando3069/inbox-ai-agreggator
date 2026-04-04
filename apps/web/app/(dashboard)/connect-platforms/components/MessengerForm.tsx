@@ -174,57 +174,7 @@ export function MessengerForm({
         </div>
       </div>
 
-      <div className={`${CARD} p-6`}>
-        <div className="mb-5">
-          <p className="text-[13px] font-semibold text-[var(--text-primary)]">Configurare Webhook</p>
-          <p className="mt-0.5 text-[12px] text-[var(--text-secondary)] leading-relaxed">
-            Configurează webhook-ul în Meta Developer Portal.
-          </p>
-        </div>
 
-        <div className="space-y-4">
-          <CopyField label="Callback URL" value={MESSENGER_WEBHOOK_URL} />
-          <CopyField label="Verify Token" value={MESSENGER_VERIFY_TOKEN} />
-        </div>
-
-        <div className="mt-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-page)] px-4 py-4">
-          <p className="text-[12px] font-semibold text-[var(--text-secondary)] mb-2.5">Pași de urmat</p>
-          <ol className="space-y-2 text-[12px] text-[var(--text-tertiary)] leading-relaxed">
-            <li className="flex gap-2">
-              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">1.</span>
-              <span>
-                Meta for Developers → App Dashboard → Messenger →{" "}
-                <span className="font-semibold text-[var(--text-secondary)]">Webhooks → Add Callback URL</span>
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">2.</span>
-              <span>
-                Lipește URL-ul și Verify Token-ul de mai sus, apasă{" "}
-                <span className="font-semibold text-[var(--text-secondary)]">Verify and Save</span>
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">3.</span>
-              <span>
-                Abonează-te la evenimentul{" "}
-                <code className="rounded border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-primary)]">
-                  messages
-                </code>{" "}
-                pentru pagina ta
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="shrink-0 font-semibold text-[var(--accent-primary)]">4.</span>
-              <span>
-                Conectează pagina prin butonul{" "}
-                <span className="font-semibold text-[var(--text-secondary)]">Connect Facebook</span>{" "}
-                și selectează pagina dorită după ce revii în aplicație
-              </span>
-            </li>
-          </ol>
-        </div>
-      </div>
     </div>
   );
 }
