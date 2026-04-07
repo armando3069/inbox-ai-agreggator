@@ -379,36 +379,6 @@ zottis-monorepo/
 
 ---
 
-## 🗄 Database Schema
-
-```
-users
- └──< auth_accounts       (Google / Microsoft OAuth)
- └──< platform_accounts   (Telegram / WhatsApp / Messenger / Email credentials)
-       └──< conversations  (one per contact per platform account)
-             └──< messages (incoming "client" + outgoing "bot")
-
-ai_usage_logs              (token usage per user per request)
-```
-
----
-
-## 🔄 Real-time Events
-
-All real-time updates use Socket.IO rooms keyed by `user:{userId}`.
-
-| Event | Direction | Payload | Description |
-|---|---|---|---|
-| `getConversations` | Client → Server | — | Fetch all conversations |
-| `conversations` | Server → Client | `conversation[]` | Response to above |
-| `getMessages` | Client → Server | `{ conversationId }` | Fetch messages for a conversation |
-| `messages` | Server → Client | `message[]` | Response to above |
-| `newMessage` | Server → Client | `message` | Pushed on every new inbound/outbound message |
-| `newConversation` | Server → Client | `conversation` | Pushed when a brand-new contact writes for the first time |
-| `error` | Server → Client | `{ message }` | Operational error |
-
----
-
 ## 🤝 Contributing
 
 1. Fork the repository
