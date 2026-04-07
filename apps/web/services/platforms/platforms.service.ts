@@ -51,8 +51,8 @@ class PlatformsService {
   getFacebookStatus = (): Promise<FacebookConnectionStatus> =>
     request.get<FacebookConnectionStatus>(ROUTES.platforms.facebookStatus);
 
-  disconnectFacebook = (): Promise<{ disconnected: boolean }> =>
-    request.delete<{ disconnected: boolean }>(ROUTES.platforms.facebookDisconnect);
+  disconnectFacebook = (): Promise<{ success: boolean; message: string }> =>
+    request.delete<{ success: boolean; message: string }>(ROUTES.platforms.facebookDisconnect);
 
   connectEmail = (payload: {
     email: string;

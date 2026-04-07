@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   Post,
   Query,
   Request,
@@ -47,8 +48,8 @@ export class FacebookController {
       });
     } catch (callbackError) {
       const reason =
-        callbackError instanceof BadRequestException
-          ? 'facebook_callback_failed'
+        callbackError instanceof HttpException
+          ? this.facebookService.getCallbackErrorReason(callbackError)
           : 'invalid_callback_state';
       redirectUrl = this.facebookService.buildFrontendErrorRedirect(reason);
     }

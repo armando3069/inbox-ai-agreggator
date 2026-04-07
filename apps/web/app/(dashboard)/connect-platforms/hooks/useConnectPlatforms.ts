@@ -316,7 +316,7 @@ export function useConnectPlatforms(isManaging: boolean) {
     setIsDisconnecting(true);
     try {
       await platformsService.disconnectFacebook();
-      setFacebookConnection(null);
+      await refreshFacebookStatus();
       setFacebookPendingPages([]);
       setFacebookSessionId(null);
       setConnectedIds((prev) => {
@@ -385,6 +385,10 @@ function mapFacebookError(reason: string | null): string {
       return "Meta nu a returnat token-ul pentru pagina selectată.";
     case "missing_code":
       return "Callback-ul Facebook nu conține codul de autorizare.";
+    case "Facebook Graph API request failed":
+      return "Facebook Graph API request failed.";
+    case "No active Facebook Messenger connection found":
+      return "Nu există o conexiune Facebook Messenger activă.";
     default:
       return reason ?? "A apărut o eroare în timpul conectării Facebook.";
   }

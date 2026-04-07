@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   BadGatewayException,
+  HttpException,
   Injectable,
   Logger,
   NotFoundException,
@@ -145,13 +146,15 @@ export class FacebookService {
     } catch (error) {
       await this.failSession(session.id);
 
-      const message =
-        error instanceof BadRequestException
-          ? this.getExceptionMessage(error)
-          : 'facebook_callback_failed';
+      const message = this.getPublicErrorMessage(error);
 
       this.logger.warn(
-        `Facebook callback failed for user ${session.user_id}: ${message}`,
+        `[Facebook callback] failed ${JSON.stringify({
+          userId: session.user_id,
+          message,
+          error:
+            error instanceof Error ? error.message : 'unknown_error',
+        })}`,
       );
 
       return this.buildRedirect('error', message, session.redirect_to);
@@ -299,9 +302,13 @@ export class FacebookService {
       where: { id: account.id },
       data: {
         access_token: '',
+        external_app_id: null,
         status: 'disconnected',
         settings: {
           ...settings,
+          pageId: null,
+          pageName: null,
+          category: null,
           tokenEncrypted: false,
           disconnectedAt: new Date().toISOString(),
           lastSubscriptionSync: unsubscribeResult
@@ -393,24 +400,65 @@ export class FacebookService {
       },
     };
 
-    await this.prisma.platform_accounts.upsert({
+    const encryptedToken = this.tokenCrypto.encrypt(page.pageAccessToken);
+    const exactAccount = await this.prisma.platform_accounts.findFirst({
       where: {
-        user_platform_bot_unique: {
-          user_id: userId,
-          platform: 'messenger',
-          external_app_id: page.pageId,
-        },
-      },
-      create: {
         user_id: userId,
         platform: 'messenger',
-        access_token: this.tokenCrypto.encrypt(page.pageAccessToken),
         external_app_id: page.pageId,
-        status: 'active',
-        settings,
       },
-      update: {
-        access_token: this.tokenCrypto.encrypt(page.pageAccessToken),
+      orderBy: { updated_at: 'desc' },
+    });
+
+    if (exactAccount) {
+      await this.prisma.platform_accounts.update({
+        where: { id: exactAccount.id },
+        data: {
+          access_token: encryptedToken,
+          external_app_id: page.pageId,
+          status: 'active',
+          settings,
+        },
+      });
+      return;
+    }
+
+    const reusableDisconnectedAccount = await this.prisma.platform_accounts.findFirst({
+      where: {
+        user_id: userId,
+        platform: 'messenger',
+        status: 'disconnected',
+      },
+      orderBy: { updated_at: 'desc' },
+    });
+
+    if (reusableDisconnectedAccount) {
+      await this.prisma.platform_accounts.update({
+        where: { id: reusableDisconnectedAccount.id },
+        data: {
+          access_token: encryptedToken,
+          external_app_id: page.pageId,
+          status: 'active',
+          settings,
+        },
+      });
+
+      this.logger.log(
+        `[Facebook reconnect] reused_disconnected_record ${JSON.stringify({
+          userId,
+          pageId: page.pageId,
+          integrationId: reusableDisconnectedAccount.id,
+        })}`,
+      );
+      return;
+    }
+
+    await this.prisma.platform_accounts.create({
+      data: {
+        user_id: userId,
+        platform: 'messenger',
+        access_token: encryptedToken,
+        external_app_id: page.pageId,
         status: 'active',
         settings,
       },
@@ -544,6 +592,10 @@ export class FacebookService {
     return this.buildRedirect('error', reason);
   }
 
+  getCallbackErrorReason(error: HttpException): string {
+    return this.getHttpExceptionMessage(error);
+  }
+
   private getExceptionMessage(error: BadRequestException): string {
     const response = error.getResponse();
     if (typeof response === 'string') {
@@ -556,5 +608,27 @@ export class FacebookService {
     }
 
     return 'bad_request';
+  }
+
+  private getPublicErrorMessage(error: unknown): string {
+    if (error instanceof HttpException) {
+      return this.getHttpExceptionMessage(error);
+    }
+
+    return 'facebook_callback_failed';
+  }
+
+  private getHttpExceptionMessage(error: HttpException): string {
+    const response = error.getResponse();
+    if (typeof response === 'string') {
+      return response;
+    }
+
+    if (response && typeof response === 'object' && 'message' in response) {
+      const message = (response as { message?: string | string[] }).message;
+      return Array.isArray(message) ? message[0] : (message ?? 'facebook_callback_failed');
+    }
+
+    return 'facebook_callback_failed';
   }
 }
