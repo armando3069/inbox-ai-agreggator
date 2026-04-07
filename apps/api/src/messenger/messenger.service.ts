@@ -96,7 +96,7 @@ export class MessengerService {
     const conversation = await this.prisma.conversations.findFirst({
       where: {
         id: dto.conversationId,
-        platform_account: { user_id: userId },
+        platform_account: { user_id: userId, status: 'active' },
       },
       include: { platform_account: true },
     });
@@ -141,7 +141,11 @@ export class MessengerService {
       const pageId = entry.id;
 
       const platformAccount = await this.prisma.platform_accounts.findFirst({
-        where: { platform: 'messenger', external_app_id: pageId },
+        where: {
+          platform: 'messenger',
+          external_app_id: pageId,
+          status: 'active',
+        },
       });
 
         if (!platformAccount) {

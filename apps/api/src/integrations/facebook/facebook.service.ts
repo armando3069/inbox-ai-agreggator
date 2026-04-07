@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  BadGatewayException,
   Injectable,
   Logger,
   NotFoundException,
@@ -11,7 +12,10 @@ import { randomBytes } from 'crypto';
 import { FRONTEND_URL } from '../../common/constants';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TokenCryptoService } from '../../common/security/token-crypto.service';
-import { FacebookGraphClient } from './facebook-graph.client';
+import {
+  FacebookGraphClient,
+  type FacebookGraphMutationResult,
+} from './facebook-graph.client';
 import type { FacebookPageOption, FacebookPageView } from './facebook.types';
 
 type FacebookSettings = Prisma.JsonObject & {
@@ -20,6 +24,13 @@ type FacebookSettings = Prisma.JsonObject & {
   pageId?: string | null;
   tokenEncrypted?: boolean;
   connectedVia?: string;
+  disconnectedAt?: string | null;
+  lastSubscriptionSync?: {
+    action: 'subscribe' | 'unsubscribe';
+    ok: boolean;
+    statusCode: number;
+    syncedAt: string;
+  } | null;
 };
 
 @Injectable()
@@ -191,8 +202,8 @@ export class FacebookService {
 
   async getStatus(userId: number) {
     const account = await this.prisma.platform_accounts.findFirst({
-      where: { user_id: userId, platform: 'messenger' },
-      orderBy: { created_at: 'desc' },
+      where: { user_id: userId, platform: 'messenger', status: 'active' },
+      orderBy: { updated_at: 'desc' },
     });
 
     if (!account) {
@@ -214,19 +225,118 @@ export class FacebookService {
   }
 
   async disconnect(userId: number) {
-    const deleted = await this.prisma.platform_accounts.deleteMany({
-      where: { user_id: userId, platform: 'messenger' },
+    const account = await this.prisma.platform_accounts.findFirst({
+      where: {
+        user_id: userId,
+        platform: 'messenger',
+        status: 'active',
+      },
+      orderBy: { updated_at: 'desc' },
+    });
+
+    if (!account) {
+      throw new NotFoundException('No active Facebook Messenger connection found');
+    }
+
+    const pageId = account.external_app_id;
+    const pageAccessToken = account.access_token
+      ? this.tokenCrypto.decrypt(account.access_token)
+      : '';
+
+    let unsubscribeResult: FacebookGraphMutationResult | null = null;
+
+    if (pageId && pageAccessToken) {
+      try {
+        unsubscribeResult = await this.graphClient.unsubscribePage(
+          pageId,
+          pageAccessToken,
+        );
+
+        this.logger.log(
+          `[Facebook unsubscribe] ${JSON.stringify({
+            userId,
+            pageId,
+            ok: unsubscribeResult.ok,
+            statusCode: unsubscribeResult.statusCode,
+            body: unsubscribeResult.body,
+          })}`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `[Facebook unsubscribe] network_failure ${JSON.stringify({
+            userId,
+            pageId,
+            message: error instanceof Error ? error.message : 'unknown_error',
+          })}`,
+        );
+      }
+    } else {
+      this.logger.warn(
+        `[Facebook disconnect] missing_page_credentials ${JSON.stringify({
+          userId,
+          pageId,
+          hasToken: Boolean(pageAccessToken),
+        })}`,
+      );
+    }
+
+    if (unsubscribeResult && !unsubscribeResult.ok) {
+      const level = unsubscribeResult.isTokenError ? 'warn' : 'error';
+      this.logger[level](
+        `[Facebook unsubscribe] api_failure ${JSON.stringify({
+          userId,
+          pageId,
+          statusCode: unsubscribeResult.statusCode,
+          isTokenError: unsubscribeResult.isTokenError,
+          body: unsubscribeResult.body,
+        })}`,
+      );
+    }
+
+    const settings = this.readSettings(account);
+
+    await this.prisma.platform_accounts.update({
+      where: { id: account.id },
+      data: {
+        access_token: '',
+        status: 'disconnected',
+        settings: {
+          ...settings,
+          tokenEncrypted: false,
+          disconnectedAt: new Date().toISOString(),
+          lastSubscriptionSync: unsubscribeResult
+            ? {
+                action: 'unsubscribe',
+                ok: unsubscribeResult.ok,
+                statusCode: unsubscribeResult.statusCode,
+                syncedAt: new Date().toISOString(),
+              }
+            : {
+                action: 'unsubscribe',
+                ok: false,
+                statusCode: 0,
+                syncedAt: new Date().toISOString(),
+              },
+        },
+      },
     });
 
     await this.prisma.facebook_oauth_sessions.deleteMany({
       where: { user_id: userId, status: 'awaiting_selection' },
     });
 
-    if (deleted.count > 0) {
-      this.logger.log(`Facebook disconnected for user ${userId}`);
-    }
+    this.logger.log(
+      `[Facebook disconnect] completed ${JSON.stringify({
+        userId,
+        pageId,
+        unsubscribed: unsubscribeResult?.ok ?? false,
+      })}`,
+    );
 
-    return { disconnected: deleted.count > 0 };
+    return {
+      success: true,
+      message: 'Facebook page disconnected successfully',
+    };
   }
 
   async getPageAccessToken(account: platform_accounts): Promise<string> {
@@ -234,12 +344,53 @@ export class FacebookService {
   }
 
   private async connectSelectedPage(userId: number, page: FacebookPageOption): Promise<void> {
+    const subscribeResult = await this.graphClient.subscribePage(
+      page.pageId,
+      page.pageAccessToken,
+    );
+
+    this.logger.log(
+      `[Facebook subscribe] ${JSON.stringify({
+        userId,
+        pageId: page.pageId,
+        ok: subscribeResult.ok,
+        statusCode: subscribeResult.statusCode,
+        body: subscribeResult.body,
+      })}`,
+    );
+
+    if (!subscribeResult.ok) {
+      throw new BadGatewayException(
+        this.getSubscriptionFailureMessage(subscribeResult, 'subscribe'),
+      );
+    }
+
+    await this.prisma.platform_accounts.updateMany({
+      where: {
+        user_id: userId,
+        platform: 'messenger',
+        status: 'active',
+        NOT: { external_app_id: page.pageId },
+      },
+      data: {
+        status: 'disconnected',
+        access_token: '',
+      },
+    });
+
     const settings: FacebookSettings = {
       pageId: page.pageId,
       pageName: page.pageName,
       category: page.category,
       tokenEncrypted: true,
       connectedVia: 'facebook_oauth',
+      disconnectedAt: null,
+      lastSubscriptionSync: {
+        action: 'subscribe',
+        ok: subscribeResult.ok,
+        statusCode: subscribeResult.statusCode,
+        syncedAt: new Date().toISOString(),
+      },
     };
 
     await this.prisma.platform_accounts.upsert({
@@ -338,6 +489,24 @@ export class FacebookService {
 
   private readSettings(account: platform_accounts): FacebookSettings {
     return ((account.settings ?? {}) as Prisma.JsonObject) as FacebookSettings;
+  }
+
+  private getSubscriptionFailureMessage(
+    result: FacebookGraphMutationResult,
+    action: 'subscribe' | 'unsubscribe',
+  ): string {
+    const graphMessage =
+      'error' in result.body &&
+      result.body.error &&
+      typeof result.body.error === 'object' &&
+      'message' in result.body.error
+        ? String(result.body.error.message)
+        : undefined;
+
+    return (
+      graphMessage ??
+      `Facebook ${action} request failed with status ${result.statusCode}`
+    );
   }
 
   private buildRedirect(

@@ -21,6 +21,17 @@ interface FacebookPagesResponse extends FacebookApiError {
   }>;
 }
 
+interface FacebookSubscriptionResponse extends FacebookApiError {
+  success?: boolean;
+}
+
+export interface FacebookGraphMutationResult {
+  ok: boolean;
+  statusCode: number;
+  body: FacebookSubscriptionResponse | Record<string, unknown>;
+  isTokenError: boolean;
+}
+
 @Injectable()
 export class FacebookGraphClient {
   private readonly graphVersion: string;
@@ -96,9 +107,23 @@ export class FacebookGraphClient {
       .map((page) => ({
         pageId: page.id!,
         pageName: page.name!,
-        pageAccessToken: page.access_token ?? '' ,
+        pageAccessToken: page.access_token ?? '',
         category: page.category ?? null,
       }));
+  }
+
+  async subscribePage(
+    pageId: string,
+    pageAccessToken: string,
+  ): Promise<FacebookGraphMutationResult> {
+    return this.mutatePageSubscription(pageId, pageAccessToken, 'POST');
+  }
+
+  async unsubscribePage(
+    pageId: string,
+    pageAccessToken: string,
+  ): Promise<FacebookGraphMutationResult> {
+    return this.mutatePageSubscription(pageId, pageAccessToken, 'DELETE');
   }
 
   private mapOAuthError(payload: FacebookApiError | { access_token?: string }): string {
@@ -118,5 +143,34 @@ export class FacebookGraphClient {
 
   private mapGraphError(payload: FacebookPagesResponse): string {
     return payload.error?.message ?? 'Facebook Graph API request failed';
+  }
+
+  private async mutatePageSubscription(
+    pageId: string,
+    pageAccessToken: string,
+    method: 'POST' | 'DELETE',
+  ): Promise<FacebookGraphMutationResult> {
+    const params = new URLSearchParams({
+      access_token: pageAccessToken,
+    });
+    const response = await fetch(
+      `${this.graphBase}/${pageId}/subscribed_apps?${params.toString()}`,
+      { method },
+    );
+    const body = (await response.json().catch(() => ({}))) as
+      | FacebookSubscriptionResponse
+      | Record<string, unknown>;
+
+    const graphError =
+      'error' in body && body.error && typeof body.error === 'object'
+        ? (body.error as FacebookApiError['error'])
+        : undefined;
+
+    return {
+      ok: response.ok,
+      statusCode: response.status,
+      body,
+      isTokenError: graphError?.code === 190,
+    };
   }
 }

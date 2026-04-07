@@ -229,7 +229,7 @@ export class TelegramService {
    */
   async getConnectedAccounts(userId: number): Promise<PlatformAccountSafe[]> {
     const accounts = await this.prisma.platform_accounts.findMany({
-      where: { user_id: userId },
+      where: { user_id: userId, status: 'active' },
       orderBy: { created_at: 'asc' },
     });
 
