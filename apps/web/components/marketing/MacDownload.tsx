@@ -34,7 +34,7 @@ export function MacDownload() {
           <div className="mt-6 flex items-center justify-center gap-4 text-[12px] text-gray-400">
             <span>v1.0.0</span>
             <span className="h-3 w-px bg-gray-200" />
-            <span>~45 MB</span>
+            <span>~90 MB</span>
             <span className="h-3 w-px bg-gray-200" />
             <span>Free</span>
           </div>

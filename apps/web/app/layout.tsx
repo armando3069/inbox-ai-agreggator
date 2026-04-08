@@ -52,6 +52,9 @@ export default function RootLayout({
             <AuthProvider>{children}</AuthProvider>
           </ThemeProvider>
         </ReactQueryProvider>
+        <script defer src="https://analytics.ai-inbox.pro/script.js"
+                data-website-id="dc488a8c-e7b2-45d2-9d97-2d7efa4ad1a3">
+        </script>
       </body>
     </html>
   );
