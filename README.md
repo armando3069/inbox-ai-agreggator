@@ -211,16 +211,16 @@ Client Browser / Electron
        │
        ├─ HTTP (Axios)  ──────────────►  NestJS REST API  ──►  PostgreSQL (Prisma)
        │                                       │
-       └─ WebSocket (Socket.IO)  ◄────────────┤
-                                    push events │
-                                  newMessage    │
-                                  newConversation│
+       └─ WebSocket (Socket.IO)   ◄────────────┤
+                                   push events │
+                                 newMessage    │
+                                newConversation│
                                                │
                           Platform webhooks ───┤
-                          (Telegram / WA /      │
-                           Messenger / Email)   │
+                         (Telegram / WA /      │
+                          Messenger / Email)   │
                                                │
-                          Anthropic Claude ─────┘
+                         Anthropic Claude ─────┘
 ```
 
 ### Backend Modules
