@@ -20,8 +20,9 @@ export function MacDownload() {
           {/* Download button */}
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a
-              href="#"
+              href="/AI-Inbox-0.0.1-arm64.dmg"
               className="inline-flex h-11 items-center justify-center gap-2.5 rounded-xl bg-gray-900 px-6 text-[14px] font-medium text-white shadow-sm transition-all hover:bg-gray-800 active:scale-[0.98]"
+              download={true}
             >
               <Apple className="h-4 w-4" />
               Download for macOS
