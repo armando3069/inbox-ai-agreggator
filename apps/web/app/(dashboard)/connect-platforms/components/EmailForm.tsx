@@ -51,10 +51,10 @@ export function EmailForm({
         </div>
         <div className="min-w-0">
           <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
-            Conectează Email
+            Connect Email
           </h2>
           <p className="mt-0.5 text-[13px] text-[var(--text-secondary)] leading-relaxed">
-            IMAP + SMTP cu parolă de aplicație
+            IMAP + SMTP with app password
           </p>
         </div>
       </div>
@@ -81,7 +81,7 @@ export function EmailForm({
 
         {/* Email */}
         <div className="space-y-2">
-          <label htmlFor="em-email" className={LABEL}>Adresă email</label>
+          <label htmlFor="em-email" className={LABEL}>Email address</label>
           <input
             id="em-email"
             type="email"
@@ -114,7 +114,7 @@ export function EmailForm({
           />
           {provider === "gmail" && (
             <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
-              Generează o parolă de aplicație în{" "}
+              Generate an app password in{" "}
               <span className="font-semibold text-[var(--text-secondary)]">
                 Google Account → Security → App passwords
               </span>
@@ -123,7 +123,7 @@ export function EmailForm({
           )}
           {provider === "outlook" && (
             <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
-              Activează IMAP în setările Outlook și folosește parola contului.
+              Enable IMAP in Outlook settings and use your account password.
             </p>
           )}
         </div>
@@ -138,7 +138,7 @@ export function EmailForm({
             {showAdvanced
               ? <ChevronUp className="h-3.5 w-3.5" />
               : <ChevronDown className="h-3.5 w-3.5" />}
-            Setări avansate IMAP/SMTP
+            Advanced settings IMAP/SMTP
           </button>
         )}
 

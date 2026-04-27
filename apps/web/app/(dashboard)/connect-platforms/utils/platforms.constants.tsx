@@ -47,7 +47,7 @@ export const PLATFORMS: PlatformConfig[] = [
   {
     id:          "telegram",
     label:       "Telegram",
-    description: "Conectează-ți botul de suport sau vânzări.",
+    description: "Connect your support or sales bot.",
     icon:        <TelegramIcon />,
     status:      "available",
     iconClass:   "text-sky-500 dark:text-sky-400",
@@ -55,7 +55,7 @@ export const PLATFORMS: PlatformConfig[] = [
   {
     id:          "whatsapp",
     label:       "WhatsApp",
-    description: "Conectează contul tău WhatsApp Business.",
+    description: "Connect your WhatsApp Business account.",
     icon:        <WhatsAppIcon />,
     status:      "available",
     iconClass:   "text-emerald-600 dark:text-emerald-400",
@@ -63,7 +63,7 @@ export const PLATFORMS: PlatformConfig[] = [
   {
     id:          "messenger",
     label:       "Messenger",
-    description: "Conectează pagina ta de Facebook Messenger.",
+    description: "Connect your Facebook Messenger page.",
     icon:        <MessengerIcon />,
     status:      "available",
     iconClass:   "text-blue-500 dark:text-blue-400",
@@ -71,7 +71,7 @@ export const PLATFORMS: PlatformConfig[] = [
   {
     id:          "email",
     label:       "Email (IMAP/SMTP)",
-    description: "Conectează Gmail sau Outlook cu parola de aplicație.",
+    description: "Connect Gmail or Outlook using an app password.",
     icon:        <EmailIcon />,
     status:      "available",
     iconClass:   "text-orange-500 dark:text-orange-400",

@@ -84,19 +84,19 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
         {uploadStatus?.state === "uploading" ? (
           <div className="text-center">
             <p className="text-[14px] font-medium text-[var(--text-primary)]">
-              Se procesează <span className="font-semibold">{uploadStatus.name}</span>…
+              Processing... <span className="font-semibold">{uploadStatus.name}</span>…
             </p>
             <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-              Parsare PDF, creare embeddings…
+              PDF parsing, creating embeddings…
             </p>
           </div>
         ) : (
           <div className="text-center">
             <p className="text-[14px] font-medium text-[var(--text-primary)]">
-              Trage un fișier PDF aici
+              Drag a PDF file here
             </p>
             <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-              sau click pentru a selecta — doar fișiere <strong className="font-medium text-[var(--text-secondary)]">.pdf</strong>
+              or click to select — files only <strong className="font-medium text-[var(--text-secondary)]">.pdf</strong>
             </p>
           </div>
         )}
@@ -121,7 +121,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
           <div className="flex-1">
             {uploadStatus.state === "done" ? (
               <p className="text-[13px] text-emerald-700">
-                <span className="font-semibold">{uploadStatus.name}</span> indexat cu succes
+                <span className="font-semibold">{uploadStatus.name}</span> successfully indexed
                 — <span className="font-semibold tabular-nums">{uploadStatus.chunks}</span> chunks.
               </p>
             ) : (
@@ -141,7 +141,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
       {kbFilesLoading ? (
         <div className="flex items-center justify-center gap-2 py-8 text-[13px] text-[var(--text-tertiary)]">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Se încarcă fișierele…
+          Loading files…
         </div>
       ) : kbFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--border-default)] bg-[var(--bg-surface)] py-12 text-center">
@@ -149,7 +149,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
             <FileText className="h-5 w-5 text-[var(--text-tertiary)]" />
           </div>
           <p className="text-[13px] text-[var(--text-tertiary)]">
-            Niciun fișier indexat. Încarcă un PDF pentru a începe.
+            No files have been indexed. Upload a PDF to get started.
           </p>
         </div>
       ) : (
@@ -157,7 +157,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
           {/* Header row */}
           <div className="flex items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-5 py-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-              Fișiere indexate
+              Indexed files
             </p>
             <button
               onClick={handleClearKb}
@@ -169,7 +169,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
               ) : (
                 <Trash2 className="h-3 w-3" />
               )}
-              Șterge tot
+              Clear all
             </button>
           </div>
 
@@ -177,9 +177,9 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[var(--border-subtle)]">
-                <th className={TH_CELL}>Fișier</th>
+                <th className={TH_CELL}>File</th>
                 <th className={`${TH_CELL} text-center`}>Chunks</th>
-                <th className={`${TH_CELL} text-center`}>Indexat</th>
+                <th className={`${TH_CELL} text-center`}>Indexed</th>
               </tr>
             </thead>
             <tbody>
@@ -210,7 +210,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
           {/* Footer */}
           <div className="border-t border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-5 py-2.5">
             <p className="text-[11px] text-[var(--text-tertiary)] tabular-nums">
-              {kbFiles.length} fișier{kbFiles.length !== 1 ? "e" : ""} ·{" "}
+              {kbFiles.length} file{kbFiles.length !== 1 ? "e" : ""} ·{" "}
               {kbFiles.reduce((s, f) => s + f.chunks, 0)} chunks total
             </p>
           </div>
@@ -225,11 +225,10 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
           </div>
           <div>
             <p className={CARD_TITLE}>
-              Întreabă Knowledge Base-ul
+              Ask the Knowledge Base
             </p>
             <p className={CARD_DESC}>
-              AI-ul va răspunde <em>exclusiv</em> pe baza documentelor PDF
-              încărcate.
+              The AI will respond <em>exclusively</em> based on the uploaded PDF documents
             </p>
           </div>
         </div>
@@ -250,7 +249,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
 
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-[11px] text-[var(--text-tertiary)]">
-            Enter pentru a trimite · Shift+Enter pentru linie nouă
+            Press Enter to send · Press Shift+Enter for a new line
           </p>
           <button
             onClick={handleKbAsk}
@@ -275,7 +274,7 @@ export default function KnowledgeBaseTab({ kb }: KnowledgeBaseTabProps) {
         {kbAnswer && (
           <div className="mt-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-4 py-3">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">
-              Răspuns din Knowledge Base
+              Answer from the Knowledge Base
             </p>
             <p className="text-[13px] text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{kbAnswer}</p>
           </div>

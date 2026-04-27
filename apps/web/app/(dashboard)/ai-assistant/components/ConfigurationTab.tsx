@@ -152,8 +152,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
                 Auto-reply
               </p>
               <p className={CARD_DESC}>
-                Asistentul AI va răspunde automat la mesajele primite
-                folosind Knowledge Base-ul configurat.
+                The AI assistant will automatically respond to incoming messages using the configured Knowledge Base.
               </p>
               <span
                 className={`mt-2.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
@@ -188,7 +187,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
           <div>
             <p className={CARD_TITLE}>Response Tone</p>
             <p className={CARD_DESC}>
-              Definește stilul de comunicare al asistentului AI în conversații.
+              Define the AI assistant's communication style in conversations.
             </p>
           </div>
         </div>
@@ -196,7 +195,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
         {configLoading ? (
           <div className="flex items-center gap-2 py-3 text-[13px] text-[var(--text-tertiary)]">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Se încarcă…
+            Loading…
           </div>
         ) : (
           <ToneSelector
@@ -219,9 +218,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
           <div>
             <p className={CARD_TITLE}>Confidence Threshold</p>
             <p className={CARD_DESC}>
-              AI-ul răspunde automat <strong className="font-medium text-[var(--text-secondary)]">numai</strong> dacă gradul de
-              siguranță depășește pragul setat. Sub prag, mesajul rămâne
-              pentru review manual.
+              The AI responds automatically <strong className="font-medium text-[var(--text-secondary)]">only</strong> if the confidence level exceeds the set threshold. Below the threshold, the message is flagged for manual review.
             </p>
           </div>
         </div>
@@ -229,7 +226,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
         {configLoading ? (
           <div className="flex items-center gap-2 py-3 text-[13px] text-[var(--text-tertiary)]">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Se încarcă…
+            Loading…
           </div>
         ) : (
           <ConfidenceSlider
@@ -250,7 +247,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
             ) : (
               <Check className="h-3.5 w-3.5" />
             )}
-            Salvează pragul
+            Save the threshold
           </button>
         </div>
       </div>
@@ -264,8 +261,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
           <div>
             <p className={CARD_TITLE}>Test AI Reply</p>
             <p className={CARD_DESC}>
-              Trimite un mesaj de test și vezi răspunsul generat de AI cu
-              tonul configurat mai sus.
+              Send a test message and see the AI-generated response using the tone you configured above.
             </p>
           </div>
         </div>
@@ -280,13 +276,13 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
             }
           }}
           rows={3}
-          placeholder="Scrie un mesaj de test..."
+          placeholder="Write a test message..."
           className={TEXTAREA}
         />
 
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-[11px] text-[var(--text-tertiary)]">
-            Enter pentru a trimite · Shift+Enter pentru linie nouă
+            Press Enter to send · Press Shift+Enter for a new line
           </p>
           <button
             onClick={handleTestSubmit}
@@ -311,7 +307,7 @@ export default function ConfigurationTab({ config }: ConfigurationTabProps) {
         {testReply && (
           <div className="mt-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-4 py-3">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)]">
-              Răspuns AI
+              AI Response
             </p>
             <p className="text-[13px] text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{testReply}</p>
           </div>

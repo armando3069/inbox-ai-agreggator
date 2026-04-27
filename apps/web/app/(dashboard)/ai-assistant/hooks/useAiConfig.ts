@@ -61,7 +61,7 @@ export function useAiConfig(): UseAiConfigReturn {
     savingConfig,
     configError:
       saveError instanceof Error
-        ? "Nu s-a putut salva configurația. Încearcă din nou."
+        ? "The configuration could not be saved. Please try again."
         : null,
     setToneState,
     setThresholdState,

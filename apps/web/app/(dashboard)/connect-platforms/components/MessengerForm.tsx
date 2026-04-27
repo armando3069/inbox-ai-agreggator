@@ -45,7 +45,7 @@ export function MessengerForm({
           </div>
           <div className="min-w-0">
             <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
-              Conectează Messenger
+              Connect Messenger
             </h2>
             <p className="mt-0.5 text-[13px] text-[var(--text-secondary)] leading-relaxed">
               Facebook Messenger — Graph API
@@ -56,18 +56,17 @@ export function MessengerForm({
         <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-page)] px-4 py-4">
             <p className="text-[13px] font-medium text-[var(--text-primary)]">
-              Conectare oficială Meta OAuth
+              Official Meta OAuth Connection
             </p>
             <p className="mt-1 text-[12px] text-[var(--text-secondary)] leading-relaxed">
-              Utilizatorul este redirecționat către Facebook, aprobă permisiunile necesare,
-              iar apoi selectează pagina pe care vrei să o sincronizezi în inbox.
+              The user is redirected to Facebook, grants the necessary permissions, and then selects the page they want to sync to their inbox.
             </p>
           </div>
 
           {isLoadingState && (
             <div className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-page)] px-4 py-3 text-[13px] text-[var(--text-secondary)]">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Se încarcă starea integrării Facebook…
+              Loading Facebook integration status…
             </div>
           )}
 
@@ -95,11 +94,10 @@ export function MessengerForm({
             <div className="space-y-3">
               <div>
                 <p className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  Selectează pagina Facebook
+                  Select the Facebook page
                 </p>
                 <p className="mt-1 text-[12px] text-[var(--text-secondary)] leading-relaxed">
-                  Am găsit mai multe pagini administrate de acest cont. Alege pagina pe care
-                  vrei să o conectezi la Messenger inbox.
+                  We found several pages managed by this account. Choose the page you want to connect to your Messenger inbox.
                 </p>
               </div>
 

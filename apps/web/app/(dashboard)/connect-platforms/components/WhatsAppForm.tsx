@@ -36,7 +36,7 @@ export function WhatsAppForm({
           </div>
           <div className="min-w-0">
             <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
-              Conectează WhatsApp
+              Connect WhatsApp
             </h2>
             <p className="mt-0.5 text-[13px] text-[var(--text-secondary)] leading-relaxed">
               WhatsApp Business Cloud API
@@ -86,7 +86,7 @@ export function WhatsAppForm({
               className={PRIMARY_BTN}
             >
               {isConnecting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              {isConnecting ? "Se conectează…" : "Conectează WhatsApp"}
+              {isConnecting ? "Connecting..." : "Connect to WhatsApp"}
             </button>
           </div>
         </form>
@@ -95,9 +95,9 @@ export function WhatsAppForm({
       {/* ── Webhook configuration card ── */}
       <div className={`${CARD} p-6`}>
         <div className="mb-5">
-          <p className="text-[13px] font-semibold text-[var(--text-primary)]">Configurare Webhook</p>
+          <p className="text-[13px] font-semibold text-[var(--text-primary)]">Webhook Setup</p>
           <p className="mt-0.5 text-[12px] text-[var(--text-secondary)] leading-relaxed">
-            Configurează webhook-ul în Meta Developer Portal.
+            Set up the webhook in the Meta Developer Portal.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export function WhatsAppForm({
         </div>
 
         <div className="mt-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-page)] px-4 py-4">
-          <p className="text-[12px] font-semibold text-[var(--text-secondary)] mb-2.5">Pași de urmat</p>
+          <p className="text-[12px] font-semibold text-[var(--text-secondary)] mb-2.5">Steps to follow</p>
           <ol className="space-y-2 text-[12px] text-[var(--text-tertiary)] leading-relaxed">
             <li className="flex gap-2">
               <span className="shrink-0 font-semibold text-[var(--accent-primary)]">1.</span>
@@ -119,14 +119,14 @@ export function WhatsAppForm({
             <li className="flex gap-2">
               <span className="shrink-0 font-semibold text-[var(--accent-primary)]">2.</span>
               <span>
-                Lipește URL-ul și token-ul de mai sus, apasă{" "}
+                Paste the URL and token above, then click{" "}
                 <span className="font-semibold text-[var(--text-secondary)]">Verify and Save</span>
               </span>
             </li>
             <li className="flex gap-2">
               <span className="shrink-0 font-semibold text-[var(--accent-primary)]">3.</span>
               <span>
-                Abonează-te la evenimentul{" "}
+                Subscribe to the event{" "}
                 <code className="rounded border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-primary)]">
                   messages
                 </code>

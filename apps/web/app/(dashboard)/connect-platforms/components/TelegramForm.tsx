@@ -21,10 +21,10 @@ export function TelegramForm({ botToken, onBotTokenChange, isConnecting, error, 
         </div>
         <div className="min-w-0">
           <h2 className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
-            Conectează Telegram
+            Connect to Telegram
           </h2>
           <p className="mt-0.5 text-[13px] text-[var(--text-secondary)] leading-relaxed">
-            Introdu token-ul botului tău Telegram
+            Enter your Telegram bot's token
           </p>
         </div>
       </div>
@@ -44,8 +44,8 @@ export function TelegramForm({ botToken, onBotTokenChange, isConnecting, error, 
             className={INPUT}
           />
           <p className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
-            Obține token-ul de la{" "}
-            <span className="font-semibold text-[var(--text-secondary)]">@BotFather</span> cu comanda{" "}
+            Get the token from{" "}
+            <span className="font-semibold text-[var(--text-secondary)]">@BotFather</span> by command{" "}
             <code className="rounded border border-[var(--border-default)] bg-[var(--bg-surface-hover)] px-1.5 py-0.5 text-[11px] font-mono text-[var(--text-primary)]">
               /newbot
             </code>
@@ -63,7 +63,7 @@ export function TelegramForm({ botToken, onBotTokenChange, isConnecting, error, 
         <div className="pt-1">
           <button type="submit" disabled={isConnecting || !botToken.trim()} className={PRIMARY_BTN}>
             {isConnecting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {isConnecting ? "Se conectează…" : "Conectează Telegram"}
+            {isConnecting ? "Connecting..." : "Connect to Telegram"}
           </button>
         </div>
       </form>

@@ -8,7 +8,7 @@ export function EmptyConfigPanel() {
         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]">
           <span className="text-sky-500 dark:text-sky-400"><TelegramIcon /></span>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-card)]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-card)]">
           <span className="text-emerald-600 dark:text-emerald-400"><WhatsAppIcon /></span>
         </div>
         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-warm)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]">
@@ -20,10 +20,10 @@ export function EmptyConfigPanel() {
       </div>
 
       <p className="text-[14px] font-semibold text-[var(--text-primary)] leading-tight">
-        Nicio platformă selectată
+          No platform selected
       </p>
       <p className="mt-2 max-w-[220px] text-[13px] text-[var(--text-secondary)] leading-relaxed">
-        Alege o platformă din stânga pentru a configura integrarea.
+          Choose a platform from the left to configure the integration.
       </p>
     </div>
   );

@@ -24,7 +24,7 @@ export default function AiAssistantPage() {
               AI Assistant
             </h1>
             <p className="text-[13px] text-[var(--text-tertiary)] mt-1 leading-relaxed">
-              Configurează asistentul inteligent pentru conversații automate și gestionează baza de cunoștințe.
+              Set up the intelligent assistant for automated conversations and manage the knowledge base.
             </p>
           </div>
 
