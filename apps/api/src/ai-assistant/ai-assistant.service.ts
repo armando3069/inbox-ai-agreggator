@@ -312,6 +312,7 @@ export class AiAssistantService {
           const { answer } = await this.knowledgeBase.answerQuestionForUser(
             userId,
             latestUserMessage,
+            conversationId,
           );
           this.logger.log(
             `[AI] PDF-KB | user=${userId} conversation=${conversationId} tone=${tone}`,

@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { CLAUDE_DEFAULTS } from '../common/constants';
+import { PrismaService } from '../prisma/prisma.service';
 
 // pdf-parse v1 exports the parse function directly via module.exports
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -38,6 +39,9 @@ const RAG_SYSTEM_PROMPT =
   'If the answer is not clearly in the provided context, reply exactly: "Nu știu, nu este în document." ' +
   'Do not invent anything.';
 
+const COST_PER_1K_IN = 0.0008;
+const COST_PER_1K_OUT = 0.004;
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Injectable()
@@ -46,7 +50,10 @@ export class KnowledgeBaseService {
 
   private readonly knowledgeByUser = new Map<number, UserKnowledge>();
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   // ── Claude client ──────────────────────────────────────────────────────────
 
@@ -58,6 +65,32 @@ export class KnowledgeBaseService {
 
   private getModelName(): string {
     return this.config.get<string>('CLAUDE_MODEL') ?? CLAUDE_DEFAULTS.model;
+  }
+
+  private async logUsage(opts: {
+    userId: number;
+    conversationId?: number;
+    tokensIn: number;
+    tokensOut: number;
+  }): Promise<void> {
+    const costUsd =
+      (opts.tokensIn / 1000) * COST_PER_1K_IN +
+      (opts.tokensOut / 1000) * COST_PER_1K_OUT;
+
+    try {
+      await this.prisma.ai_usage_logs.create({
+        data: {
+          user_id: opts.userId,
+          conversation_id: opts.conversationId ?? null,
+          model: this.getModelName(),
+          tokens_in: opts.tokensIn,
+          tokens_out: opts.tokensOut,
+          cost_usd: costUsd,
+        },
+      });
+    } catch (e) {
+      this.logger.warn('[KB] Failed to log AI usage', e);
+    }
   }
 
   // ── Disk persistence (metadata only) ─────────────────────────────────────
@@ -146,6 +179,7 @@ export class KnowledgeBaseService {
   async answerQuestionForUser(
     userId: number,
     question: string,
+    conversationId?: number,
   ): Promise<{ answer: string; usedChunks: string[] }> {
     const userKB = this.getOrLoad(userId);
 
@@ -185,6 +219,12 @@ export class KnowledgeBaseService {
     });
 
     const answer = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
+    void this.logUsage({
+      userId,
+      conversationId,
+      tokensIn: response.usage.input_tokens,
+      tokensOut: response.usage.output_tokens,
+    });
     this.logger.log(`[KB] Answered question for user ${userId} using ${contentBlocks.length - 1} PDF(s)`);
 
     return { answer, usedChunks: [] };
